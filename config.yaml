@@ -1,0 +1,7 @@
+App:
+  environment: "dev"
+kafka:
+  brokers: ["localhost:9092"]
+  topicsConsumer: ["security-assessment"]
+  topicsProducer: ["security-assessment"]
+  groupID: "security-assessment-ingestion-group"
