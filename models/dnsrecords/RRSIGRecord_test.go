@@ -29,6 +29,14 @@ func TestNewRRSIGRecord(t *testing.T) {
 }
 
 func compareRRSIGRecords(a, b *RRSIGRecord) bool {
+	if a == nil && b == nil {
+		return true
+	}
+
+	if a == nil || b == nil {
+		return false
+	}
+
 	return a.TypeCovered == b.TypeCovered &&
 		a.Algorithm == b.Algorithm &&
 		a.Labels == b.Labels &&
