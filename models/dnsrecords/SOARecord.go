@@ -44,6 +44,43 @@ type SOARecord struct {
 	RawResponse string
 }
 
+// NewSOARecord creates a new SOARecord struct from a raw DNS response string.
+// The function parses the response string, which is expected to be obtained from
+// a DNS query using the 'delv' command-line tool, and populates an SOARecord struct
+// with the parsed information. An SOA (Start of Authority) record contains essential
+// metadata about a DNS zone, such as the zone's primary name server and various
+// timing parameters.
+//
+// Parameters:
+//
+//	response: A string containing the raw textual response from the 'delv' command-line tool.
+//	          This response is expected to be the result of a query for an SOA record for a specific domain.
+//	          The response string should include the SOA record along with other relevant DNS information.
+//
+// Return Value:
+//
+//	*SOARecord: A pointer to an SOARecord struct that contains the parsed SOA record details.
+//	            This struct provides a structured representation of the zone's metadata,
+//	            such as the primary name server, administrative contact, and timing parameters.
+//
+//	error: An error object that indicates any issues encountered during the parsing of the
+//	       response string. If the parsing is successful, the error is nil. If parsing fails,
+//	       the error provides details about the cause of the failure.
+//
+// Example Usage:
+//
+//	soaRecord, err := NewSOARecord(rawDelvResponse)
+//	if err != nil {
+//	    // Handle error
+//	}
+//	// Use soaRecord for DNS administration or other purposes
+//
+// Note:
+//
+//	This function is specifically designed to parse the output of the 'delv' command-line tool,
+//	which is used for DNS diagnostics and troubleshooting. It assumes that the input string is
+//	in the format provided by 'delv'. The function may not work correctly with responses from
+//	other tools or in different formats.
 func NewSOARecord(response string) (*SOARecord, error) {
 	lines := strings.Split(response, "\n")
 	if strings.Contains(response, "resolution failed") {
