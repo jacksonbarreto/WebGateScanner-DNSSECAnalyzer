@@ -46,35 +46,35 @@ type DNSNegationInfo struct {
 //
 // Parameters:
 //
-//   responseNSEC: A string containing the raw textual response from the 'delv' command-line tool for an NSEC query.
-//                 This response typically includes the NSEC record, which provides authenticated denial of existence for DNS records.
+//	responseNSEC: A string containing the raw textual response from the 'delv' command-line tool for an NSEC query.
+//	              This response typically includes the NSEC record, which provides authenticated denial of existence for DNS records.
 //
-//   responseNSEC3Param: A string containing the raw textual response from the 'delv' command-line tool for an NSEC3PARAM query.
-//                       This response includes the NSEC3PARAM record, which specifies parameters for the NSEC3 protocol in DNSSEC.
+//	responseNSEC3Param: A string containing the raw textual response from the 'delv' command-line tool for an NSEC3PARAM query.
+//	                    This response includes the NSEC3PARAM record, which specifies parameters for the NSEC3 protocol in DNSSEC.
 //
 // Return Value:
 //
-//   *DNSNegationInfo: A pointer to a DNSNegationInfo struct that contains the parsed details of NSEC and NSEC3PARAM records,
-//                     along with the raw responses. This struct provides a structured representation of DNSSEC denial-of-existence information.
+//	*DNSNegationInfo: A pointer to a DNSNegationInfo struct that contains the parsed details of NSEC and NSEC3PARAM records,
+//	                  along with the raw responses. This struct provides a structured representation of DNSSEC denial-of-existence information.
 //
-//   error: An error object that indicates any issues encountered during the parsing of the response strings.
-//          If both parsing operations are successful, the error is nil. If parsing of either record type fails,
-//          the error provides details about the cause of the failure. In case of an error, the respective record field in DNSNegationInfo
-//          will be set to nil.
+//	error: An error object that indicates any issues encountered during the parsing of the response strings.
+//	       If both parsing operations are successful, the error is nil. If parsing of either record type fails,
+//	       the error provides details about the cause of the failure. In case of an error, the respective record field in DNSNegationInfo
+//	       will be set to nil.
 //
 // Example Usage:
 //
-//   dnsNegationInfo, err := NewDNSNegationInfo(rawNSECResponse, rawNSEC3ParamResponse)
-//   if err != nil {
-//       // Handle error
-//   }
-//   // Use dnsNegationInfo for DNSSEC analysis or other purposes
+//	dnsNegationInfo, err := NewDNSNegationInfo(rawNSECResponse, rawNSEC3ParamResponse)
+//	if err != nil {
+//	    // Handle error
+//	}
+//	// Use dnsNegationInfo for DNSSEC analysis or other purposes
 //
 // Note:
 //
-//   This function is specifically designed to handle the output of the 'delv' command-line tool for DNSSEC-related queries,
-//   particularly NSEC and NSEC3PARAM records. It expects the input strings to be in the format provided by 'delv' and may not work
-//   correctly with responses from other tools or in different formats.
+//	This function is specifically designed to handle the output of the 'delv' command-line tool for DNSSEC-related queries,
+//	particularly NSEC and NSEC3PARAM records. It expects the input strings to be in the format provided by 'delv' and may not work
+//	correctly with responses from other tools or in different formats.
 func NewDNSNegationInfo(responseNSEC string, responseNSEC3Param string) (*DNSNegationInfo, error) {
 	dnsNegationInfo := &DNSNegationInfo{}
 	dnsNegationInfo.RawResponse.NSEC = responseNSEC

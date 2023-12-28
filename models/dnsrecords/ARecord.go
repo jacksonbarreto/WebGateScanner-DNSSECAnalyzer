@@ -51,7 +51,7 @@ type AResponse struct {
 	RawResponse string
 }
 
-// newARecord parses a raw DNS response string and creates a new AResponse struct.
+// NewARecord parses a raw DNS response string and creates a new AResponse struct.
 // This function is designed to work with the output of the 'delv' command-line tool
 // for A queries. The A query is used to resolve a domain name to its IPv4 address.
 // The parsed information from the 'delv' response is used to populate an AResponse struct,
@@ -89,7 +89,7 @@ type AResponse struct {
 //	which is commonly used for DNS diagnostics and troubleshooting. The function assumes that the input
 //	string is in the format provided by 'delv' and may not work correctly with responses from
 //	other tools or in different formats.
-func newARecord(response string) (*AResponse, error) {
+func NewARecord(response string) (*AResponse, error) {
 	lines := strings.Split(response, "\n")
 	if strings.Contains(response, "resolution failed") {
 		return nil, fmt.Errorf("resolution failed: %s", lines[0])

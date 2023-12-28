@@ -51,7 +51,7 @@ type AAAAResponse struct {
 	RawResponse string
 }
 
-// newAAAARecord parses a raw DNS response string and creates a new AAAAResponse struct.
+// NewAAAARecord parses a raw DNS response string and creates a new AAAAResponse struct.
 // This function is specifically designed to work with the output of the 'delv' command-line tool
 // for AAAA queries. The AAAA query is used to resolve a domain name to its IPv6 address.
 // The parsed information from the 'delv' response is used to populate a AAAAResponse struct,
@@ -77,7 +77,7 @@ type AAAAResponse struct {
 //
 // Example Usage:
 //
-//	aaaaResponse, err := newAAAARecord(rawDelvResponse)
+//	aaaaResponse, err := NewAAAARecord(rawDelvResponse)
 //	if err != nil {
 //	    // Handle error
 //	}
@@ -89,7 +89,7 @@ type AAAAResponse struct {
 //	which is commonly used for DNS diagnostics and troubleshooting. The function assumes that the input
 //	string is in the format provided by 'delv' and may not work correctly with responses from
 //	other tools or in different formats.
-func newAAAARecord(response string) (*AAAAResponse, error) {
+func NewAAAARecord(response string) (*AAAAResponse, error) {
 	lines := strings.Split(response, "\n")
 	if strings.Contains(response, "resolution failed") {
 		return nil, fmt.Errorf("resolution failed: %s", lines[0])

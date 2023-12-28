@@ -29,7 +29,7 @@ func TestNewAAAARecordOK(t *testing.T) {
 		RawResponse: response,
 	}
 
-	aaaaRecord, err := newAAAARecord(response)
+	aaaaRecord, err := NewAAAARecord(response)
 	if err != nil {
 		t.Fatalf("Failed to parse AAAA record: %v", err)
 	}
@@ -53,7 +53,7 @@ func TestNewAAAARecordNoDNSSEC(t *testing.T) {
 		RawResponse: response,
 	}
 
-	aaaaRecord, err := newAAAARecord(response)
+	aaaaRecord, err := NewAAAARecord(response)
 	if err != nil {
 		t.Fatalf("Failed to parse AAAA record: %v", err)
 	}
@@ -66,7 +66,7 @@ func TestNewAAAARecordNoDNSSEC(t *testing.T) {
 func TestNewAAAARecordNoIPv6(t *testing.T) {
 	response := badAAAAResponse
 
-	dsRecord, err := newAAAARecord(response)
+	dsRecord, err := NewAAAARecord(response)
 	if err == nil {
 		t.Fatalf("Expected resolution failed error, got nil")
 	}

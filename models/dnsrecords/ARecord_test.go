@@ -28,7 +28,7 @@ func TestNewARecordOK(t *testing.T) {
 		RawResponse: response,
 	}
 
-	aRecord, err := newARecord(response)
+	aRecord, err := NewARecord(response)
 	if err != nil {
 		t.Fatalf("Failed to parse A record: %v", err)
 	}
@@ -53,7 +53,7 @@ func TestNewARecordNoDNSSEC(t *testing.T) {
 		RawResponse: response,
 	}
 
-	aRecord, err := newARecord(response)
+	aRecord, err := NewARecord(response)
 	if err != nil {
 		t.Fatalf("Failed to parse A record: %v", err)
 	}
