@@ -37,7 +37,7 @@ type NSECRecord struct {
 	RRSIG          *RRSIGRecord
 }
 
-// NewNSECRecord parses a raw DNS response string and creates a new NSECRecord struct.
+// Parse parses a raw DNS response string and creates a new NSECRecord struct.
 // This function is designed to work with the output of the 'delv' command-line tool
 // for NSEC queries in the context of DNSSEC. NSEC (Next SECure) records provide authenticated
 // denial of existence for DNS records, indicating which domain names do not exist in a zone.
@@ -63,7 +63,7 @@ type NSECRecord struct {
 //
 // Example Usage:
 //
-//	nsecRecord, err := NewNSECRecord(rawDelvResponse)
+//	nsecRecord, err := Parse(rawDelvResponse)
 //	if err != nil {
 //	    // Handle error
 //	}
@@ -75,42 +75,58 @@ type NSECRecord struct {
 //	which is commonly used for DNSSEC diagnostics and troubleshooting. The function assumes that the input
 //	string is in the format provided by 'delv' and may not work correctly with responses from
 //	other tools or in different formats.
-func NewNSECRecord(response string) (*NSECRecord, error) {
+func (r *NSECRecord) Parse(response string) (DNSRecordResult, error) {
 	lines := strings.Split(response, "\n")
 	if strings.Contains(response, "resolution failed") {
 		return nil, fmt.Errorf("resolution failed: %s", lines[0])
 	}
 
-	record := &NSECRecord{}
 	nsecRegex := regexp.MustCompile(`\bIN\s+NSEC\b`)
 	rrsigRegex := regexp.MustCompile(`\bRRSIG\s+NSEC\b`)
 
 	for _, line := range lines {
 		if strings.HasPrefix(line, "; fully validated") {
-			record.Validated = true
+			r.Validated = true
 		} else if strings.HasPrefix(line, "; unsigned answer") {
-			record.Validated = false
+			r.Validated = false
 		} else if nsecRegex.MatchString(line) {
 			parts := strings.Fields(line)
 			if len(parts) < 6 {
-				return nil, fmt.Errorf("invalid NSEC record: %s", line)
+				return nil, fmt.Errorf("invalid NSEC r: %s", line)
 			}
 			ttl, err := strconv.ParseUint(parts[1], 10, 32)
 			if err != nil {
-				return nil, fmt.Errorf("invalid TTL '%s' in NSEC record: %v", parts[1], err)
+				return nil, fmt.Errorf("invalid TTL '%s' in NSEC r: %v", parts[1], err)
 			}
-			record.TTL = uint32(int(ttl))
+			r.TTL = uint32(int(ttl))
 
-			record.NextDomainName = parts[4]
-			record.Types = strings.Join(parts[5:], ";")
+			r.NextDomainName = parts[4]
+			r.Types = strings.Join(parts[5:], ";")
 
 		} else if rrsigRegex.MatchString(line) {
-			rrsigRecord, err := NewRRSIGRecord(line)
+			rrsigParser := &RRSIGRecord{}
+			rrsigRecord, err := rrsigParser.Parse(line)
 			if err != nil {
 				return nil, err
 			}
-			record.RRSIG = rrsigRecord
+			r.RRSIG = rrsigRecord.(*RRSIGRecord)
 		}
 	}
-	return record, nil
+	return r, nil
+}
+
+// Compare checks the equality between two instances of NSECRecord.
+// This function is useful for testing and validation purposes.
+//
+// Parameters:
+// - b: A reference to another instance for comparison.
+//
+// Returns:
+//   - bool: Returns true if the corresponding properties of 'a' and 'b' are equal,
+//     otherwise, returns false.
+func (r *NSECRecord) Compare(b *NSECRecord) bool {
+	return r.NextDomainName == b.NextDomainName &&
+		r.Types == b.Types &&
+		r.Validated == b.Validated &&
+		r.RRSIG.Compare(b.RRSIG)
 }

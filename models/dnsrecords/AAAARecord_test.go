@@ -28,13 +28,17 @@ func TestNewAAAARecordOK(t *testing.T) {
 		},
 		RawResponse: response,
 	}
-
-	aaaaRecord, err := NewAAAARecord(response)
+	r := &AAAAResponse{}
+	result, err := r.Parse(response)
 	if err != nil {
 		t.Fatalf("Failed to parse AAAA record: %v", err)
 	}
+	aaaaRecord, ok := result.(*AAAAResponse)
+	if !ok {
+		t.Fatalf("Result is not a *AAAAResponse")
+	}
 
-	if !compareAAAAResponses(aaaaRecord, expected) {
+	if !aaaaRecord.Compare(expected) {
 		t.Errorf("Parsed record %+v does not match expected %+v", aaaaRecord, expected)
 	}
 }
@@ -52,21 +56,25 @@ func TestNewAAAARecordNoDNSSEC(t *testing.T) {
 		RRSIG:       nil,
 		RawResponse: response,
 	}
-
-	aaaaRecord, err := NewAAAARecord(response)
+	r := &AAAAResponse{}
+	result, err := r.Parse(response)
 	if err != nil {
 		t.Fatalf("Failed to parse AAAA record: %v", err)
 	}
+	aaaaRecord, ok := result.(*AAAAResponse)
+	if !ok {
+		t.Fatalf("Result is not a *AAAAResponse")
+	}
 
-	if !compareAAAAResponses(aaaaRecord, expected) {
+	if !aaaaRecord.Compare(expected) {
 		t.Errorf("Parsed record %+v does not match expected %+v", aaaaRecord, expected)
 	}
 }
 
 func TestNewAAAARecordNoIPv6(t *testing.T) {
 	response := badAAAAResponse
-
-	dsRecord, err := NewAAAARecord(response)
+	r := &AAAAResponse{}
+	dsRecord, err := r.Parse(response)
 	if err == nil {
 		t.Fatalf("Expected resolution failed error, got nil")
 	}
@@ -77,24 +85,6 @@ func TestNewAAAARecordNoIPv6(t *testing.T) {
 	if !strings.Contains(err.Error(), "resolution failed") {
 		t.Errorf("Expected error to contain 'resolution failed', got: %v", err)
 	}
-}
-
-func compareAAAARecords(a, b *AAAARecord) bool {
-	return a.IPv6 == b.IPv6
-}
-
-func compareAAAAResponses(a, b *AAAAResponse) bool {
-	if len(a.Records) != len(b.Records) {
-		return false
-	}
-	for i := range a.Records {
-		if !compareAAAARecords(&a.Records[i], &b.Records[i]) {
-			return false
-		}
-	}
-	return a.Validated == b.Validated &&
-		compareRRSIGRecords(a.RRSIG, b.RRSIG) &&
-		a.RawResponse == b.RawResponse
 }
 
 const goodAAAAResponse = `; fully validated

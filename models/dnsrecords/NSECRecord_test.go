@@ -24,23 +24,31 @@ func TestNewNSECRecordGoodResponse(t *testing.T) {
 			Signature:   "XhwuwEZiiohAhkTOMuk5+dyBD/yhJatUXHvIArt05t8FA7YYGJGHuwZM24cfumpHxXBgVlRWTuYnFlJbmaPBtqDoYQs4txw0UsIuFXo1lAdK713OMUp4lWlkf04hJC4LWRiDvZg2k/glXSo077O3Fyg5VYjU/YpTNyR4DbgJDGo=",
 		},
 	}
-
-	nsecRecord, err := NewNSECRecord(response)
+	r := &NSECRecord{}
+	result, err := r.Parse(response)
 	if err != nil {
 		t.Fatalf("Failed to parse NSEC record: %v", err)
 	}
+	nsecRecord, ok := result.(*NSECRecord)
+	if !ok {
+		t.Fatalf("Result is not a *NSECRecord")
+	}
 
-	if !compareNSECRecords(nsecRecord, expected) {
+	if !nsecRecord.Compare(expected) {
 		t.Errorf("Parsed record %+v does not match expected %+v", nsecRecord, expected)
 	}
 }
 
 func TestNewNSECRecordBadResponse(t *testing.T) {
 	response := badNsecResponse
-
-	nsecRecord, err := NewNSECRecord(response)
+	r := &NSECRecord{}
+	result, err := r.Parse(response)
 	if err == nil {
 		t.Fatalf("Expected resolution failed error, got nil")
+	}
+	nsecRecord, ok := result.(*NSECRecord)
+	if ok {
+		t.Fatalf("Expected nil NSEC record, got %+v", nsecRecord)
 	}
 	if nsecRecord != nil {
 		t.Fatalf("Expected nil NSEC response, got %+v", nsecRecord)
@@ -49,13 +57,6 @@ func TestNewNSECRecordBadResponse(t *testing.T) {
 	if !strings.Contains(err.Error(), "resolution failed") {
 		t.Errorf("Expected error to contain 'resolution failed', got: %v", err)
 	}
-}
-
-func compareNSECRecords(a, b *NSECRecord) bool {
-	return a.NextDomainName == b.NextDomainName &&
-		a.Types == b.Types &&
-		a.Validated == b.Validated &&
-		compareRRSIGRecords(a.RRSIG, b.RRSIG)
 }
 
 const goodNsecResponse = `; fully validated

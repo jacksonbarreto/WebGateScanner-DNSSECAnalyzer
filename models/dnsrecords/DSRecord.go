@@ -63,7 +63,7 @@ type DSResponse struct {
 	RawResponse string
 }
 
-// NewDSRecord creates a new DSResponse struct from a raw DNS response string.
+// Parse creates a new DSResponse struct from a raw DNS response string.
 // A DSResponse struct is populated with the parsed information from the DNS response,
 // typically obtained from a DNSSEC DS record query using the 'delv' command-line tool.
 //
@@ -87,7 +87,7 @@ type DSResponse struct {
 //
 // Example Usage:
 //
-//	dsResponse, err := NewDSRecord(rawDelvResponse)
+//	dsResponse, err := Parse(rawDelvResponse)
 //	if err != nil {
 //	    // Handle error
 //	}
@@ -99,56 +99,106 @@ type DSResponse struct {
 //	which is used for DNSSEC troubleshooting and diagnostics. The function assumes
 //	that the input string is in the format provided by 'delv', and it may not work
 //	correctly with responses from other tools or in different formats.
-func NewDSRecord(response string) (*DSResponse, error) {
+func (r *DSResponse) Parse(response string) (DNSRecordResult, error) {
 	lines := strings.Split(response, "\n")
 	if strings.Contains(response, "resolution failed") {
 		return nil, fmt.Errorf("resolution failed: %s", lines[0])
 	}
-	record := &DSResponse{}
-	record.RawResponse = response
+	r.RawResponse = response
 	dsRegex := regexp.MustCompile(`\bIN\s+DS\b`)
 	rrsigRegex := regexp.MustCompile(`\bRRSIG\s+DS\b`)
 
 	for _, line := range lines {
 		if strings.HasPrefix(line, "; fully validated") {
-			record.Validated = true
+			r.Validated = true
 		} else if strings.HasPrefix(line, "; unsigned answer") {
-			record.Validated = false
+			r.Validated = false
 		} else if dsRegex.MatchString(line) {
 			dsRecord := &DSRecord{}
 			parts := strings.Fields(line)
 			if len(parts) < 8 {
-				return nil, fmt.Errorf("invalid DS record format: %s", line)
+				return nil, fmt.Errorf("invalid DS r format: %s", line)
 			}
 
 			keyTag, err := strconv.ParseUint(parts[4], 10, 16)
 			if err != nil {
-				return nil, fmt.Errorf("invalid key tag '%s' in DS record: %v", parts[4], err)
+				return nil, fmt.Errorf("invalid key tag '%s' in DS r: %v", parts[4], err)
 			}
 			dsRecord.KeyTag = uint16(keyTag)
 
 			algorithm, err := strconv.ParseUint(parts[5], 10, 8)
 			if err != nil {
-				return nil, fmt.Errorf("invalid algorithm '%s' in DS record: %v", parts[5], err)
+				return nil, fmt.Errorf("invalid algorithm '%s' in DS r: %v", parts[5], err)
 			}
 			dsRecord.Algorithm = uint8(algorithm)
 
 			digestType, err := strconv.ParseUint(parts[6], 10, 8)
 			if err != nil {
-				return nil, fmt.Errorf("invalid digest type '%s' in DS record: %v", parts[6], err)
+				return nil, fmt.Errorf("invalid digest type '%s' in DS r: %v", parts[6], err)
 			}
 			dsRecord.DigestType = uint8(digestType)
 
 			dsRecord.Digest = strings.Join(parts[7:], "")
 
-			record.Records = append(record.Records, *dsRecord)
+			r.Records = append(r.Records, *dsRecord)
 		} else if rrsigRegex.MatchString(line) {
-			rrsigRecord, err := NewRRSIGRecord(line)
+			rrsigParser := &RRSIGRecord{}
+			rrsigRecord, err := rrsigParser.Parse(line)
 			if err != nil {
 				return nil, err
 			}
-			record.RRSIG = rrsigRecord
+			r.RRSIG = rrsigRecord.(*RRSIGRecord)
 		}
 	}
-	return record, nil
+	return r, nil
+}
+
+// Compare checks the equality between two instances of DSRecord.
+// This function is useful for testing and validation purposes, where it is necessary
+// to compare two DS records to verify if they have the same values.
+//
+// Parameters:
+// - b: A reference to another instance of DSRecord for comparison.
+//
+// Returns:
+//   - bool: Returns true if all properties of 'a' and 'b' are equal;
+//     otherwise, returns false.
+func (a *DSRecord) Compare(b *DSRecord) bool {
+	return a.KeyTag == b.KeyTag &&
+		a.Algorithm == b.Algorithm &&
+		a.DigestType == b.DigestType &&
+		a.Digest == b.Digest
+}
+
+// Compare checks the equality between two instances of DSResponse.
+// This function is useful for testing and validation purposes, where it is necessary
+// to compare two DS responses to verify if they contain the same records,
+// validation status, RRSIG records, and raw DNS response.
+//
+// Parameters:
+// - b: A reference to another instance of DSResponse for comparison.
+//
+// Returns:
+//   - bool: Returns true if the corresponding properties of 'a' and 'b' are equal,
+//     including the individual DS records, validation status, RRSIG records,
+//     and the raw response; otherwise, returns false.
+func (r *DSResponse) Compare(b *DSResponse) bool {
+	if len(r.Records) != len(b.Records) {
+		return false
+	}
+	for i := range r.Records {
+		if !r.Records[i].Compare(&b.Records[i]) {
+			return false
+		}
+	}
+
+	if r.RRSIG != nil && b.RRSIG != nil {
+		if !r.RRSIG.Compare(b.RRSIG) {
+			return false
+		}
+	} else if r.RRSIG != b.RRSIG {
+		return false
+	}
+
+	return r.Validated == b.Validated && r.RawResponse == b.RawResponse
 }

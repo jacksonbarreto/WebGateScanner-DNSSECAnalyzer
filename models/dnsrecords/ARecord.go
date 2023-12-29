@@ -51,7 +51,7 @@ type AResponse struct {
 	RawResponse string
 }
 
-// NewARecord parses a raw DNS response string and creates a new AResponse struct.
+// Parse parses a raw DNS response string and creates a new AResponse struct.
 // This function is designed to work with the output of the 'delv' command-line tool
 // for A queries. The A query is used to resolve a domain name to its IPv4 address.
 // The parsed information from the 'delv' response is used to populate an AResponse struct,
@@ -89,44 +89,80 @@ type AResponse struct {
 //	which is commonly used for DNS diagnostics and troubleshooting. The function assumes that the input
 //	string is in the format provided by 'delv' and may not work correctly with responses from
 //	other tools or in different formats.
-func NewARecord(response string) (*AResponse, error) {
+func (r *AResponse) Parse(response string) (DNSRecordResult, error) {
 	lines := strings.Split(response, "\n")
 	if strings.Contains(response, "resolution failed") {
 		return nil, fmt.Errorf("resolution failed: %s", lines[0])
 	}
-	record := &AResponse{}
-	record.RawResponse = response
+	r.RawResponse = response
 	aRegex := regexp.MustCompile(`\bIN\s+A\b`)
 	rrsigRegex := regexp.MustCompile(`\bRRSIG\s+A\b`)
 
 	for _, line := range lines {
 		if strings.HasPrefix(line, "; fully validated") {
-			record.Validated = true
+			r.Validated = true
 		} else if strings.HasPrefix(line, "; unsigned answer") {
-			record.Validated = false
+			r.Validated = false
 		} else if aRegex.MatchString(line) {
 			aRecord := &ARecord{}
 			parts := strings.Fields(line)
 			if len(parts) < 5 {
-				return nil, fmt.Errorf("invalid A record: %s", line)
+				return nil, fmt.Errorf("invalid A r: %s", line)
 			}
 			ttl, err := strconv.ParseUint(parts[1], 10, 32)
 			if err != nil {
-				return nil, fmt.Errorf("invalid TTL '%s' in A record: %v", parts[1], err)
+				return nil, fmt.Errorf("invalid TTL '%s' in A r: %v", parts[1], err)
 			}
 			aRecord.OriginalTTL = uint32(int(ttl))
 
 			aRecord.IPv4 = parts[4]
-			record.Records = append(record.Records, *aRecord)
+			r.Records = append(r.Records, *aRecord)
 
 		} else if rrsigRegex.MatchString(line) {
-			rrsigRecord, err := NewRRSIGRecord(line)
+			rrsigParser := &RRSIGRecord{}
+			rrsigRecord, err := rrsigParser.Parse(line)
 			if err != nil {
 				return nil, err
 			}
-			record.RRSIG = rrsigRecord
+			r.RRSIG = rrsigRecord.(*RRSIGRecord)
 		}
 	}
 
-	return record, nil
+	return r, nil
+}
+
+// Compare checks the equality between two instances of ARecord.
+// This function is useful for testing and validation purposes.
+//
+// Parameters:
+// - b: A reference to another instance for comparison.
+//
+// Returns:
+//   - bool: Returns true if the corresponding properties of 'a' and 'b' are equal,
+//     otherwise, returns false.
+func (r *ARecord) Compare(b *ARecord) bool {
+	return r.IPv4 == b.IPv4
+}
+
+// Compare checks the equality between two instances of AResponse.
+// This function is useful for testing and validation purposes.
+//
+// Parameters:
+// - b: A reference to another instance for comparison.
+//
+// Returns:
+//   - bool: Returns true if the corresponding properties of 'a' and 'b' are equal,
+//     otherwise, returns false.
+func (r *AResponse) Compare(b *AResponse) bool {
+	if len(r.Records) != len(b.Records) {
+		return false
+	}
+	for i := range r.Records {
+		if !r.Records[i].Compare(&b.Records[i]) {
+			return false
+		}
+	}
+	return r.Validated == b.Validated &&
+		r.RRSIG.Compare(b.RRSIG) &&
+		r.RawResponse == b.RawResponse
 }

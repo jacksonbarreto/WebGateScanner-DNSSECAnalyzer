@@ -43,7 +43,7 @@ type NSEC3PARAMRecord struct {
 	RRSIG         *RRSIGRecord
 }
 
-// NewNSEC3PARAMRecord parses a raw DNS response string and creates a new NSEC3PARAMRecord struct.
+// Parse parses a raw DNS response string and creates a new NSEC3PARAMRecord struct.
 // This function is specifically designed to work with the output of the 'delv' command-line tool
 // for NSEC3PARAM queries in the context of DNSSEC. NSEC3PARAM records specify parameters for
 // the NSEC3 protocol, which enhances DNSSEC by preventing zone walking. The parsed information
@@ -68,7 +68,7 @@ type NSEC3PARAMRecord struct {
 //
 // Example Usage:
 //
-//	nsec3paramRecord, err := NewNSEC3PARAMRecord(rawDelvResponse)
+//	nsec3paramRecord, err := Parse(rawDelvResponse)
 //	if err != nil {
 //	    // Handle error
 //	}
@@ -80,67 +80,86 @@ type NSEC3PARAMRecord struct {
 //	which is commonly used for DNSSEC diagnostics and troubleshooting. The function assumes that the input
 //	string is in the format provided by 'delv' and may not work correctly with responses from
 //	other tools or in different formats.
-func NewNSEC3PARAMRecord(response string) (*NSEC3PARAMRecord, error) {
+func (r *NSEC3PARAMRecord) Parse(response string) (DNSRecordResult, error) {
 	lines := strings.Split(response, "\n")
 	if strings.Contains(response, "resolution failed") {
 		return nil, fmt.Errorf("resolution failed: %s", lines[0])
 	}
 
-	record := &NSEC3PARAMRecord{}
 	nsec3ParamRegex := regexp.MustCompile(`\bIN\s+NSEC3PARAM\b`)
 	rrsigNsecParamRegex := regexp.MustCompile(`\bRRSIG\s+NSEC3PARAM\b`)
 
 	for _, line := range lines {
 		if strings.HasPrefix(line, "; fully validated") {
-			record.Validated = true
+			r.Validated = true
 		} else if strings.HasPrefix(line, "; unsigned answer") {
-			record.Validated = false
+			r.Validated = false
 		} else if nsec3ParamRegex.MatchString(line) {
 			parts := strings.Fields(line)
 			if len(parts) < 8 {
-				return nil, fmt.Errorf("invalid NSEC3PARAMRecord record: %s", line)
+				return nil, fmt.Errorf("invalid NSEC3PARAMRecord r: %s", line)
 			}
 			ttl, err := strconv.ParseUint(parts[1], 10, 32)
 			if err != nil {
-				return nil, fmt.Errorf("invalid TTL '%s' in NSEC3PARAMRecord record: %v", parts[1], err)
+				return nil, fmt.Errorf("invalid TTL '%s' in NSEC3PARAMRecord r: %v", parts[1], err)
 			}
-			record.TTL = uint32(int(ttl))
+			r.TTL = uint32(int(ttl))
 
 			hashAlgorithm, err := strconv.ParseUint(parts[4], 10, 8)
 			if err != nil {
-				return nil, fmt.Errorf("invalid Hash Algorithm '%s' in NSEC3PARAMRecord record: %v", parts[4], err)
+				return nil, fmt.Errorf("invalid Hash Algorithm '%s' in NSEC3PARAMRecord r: %v", parts[4], err)
 			}
-			record.HashAlgorithm = uint8(int(hashAlgorithm))
+			r.HashAlgorithm = uint8(int(hashAlgorithm))
 
 			flags, err := strconv.ParseUint(parts[5], 10, 8)
 			if err != nil {
-				return nil, fmt.Errorf("invalid Flags '%s' in NSEC3PARAMRecord record: %v", parts[5], err)
+				return nil, fmt.Errorf("invalid Flags '%s' in NSEC3PARAMRecord r: %v", parts[5], err)
 			}
-			record.Flags = uint8(int(flags))
+			r.Flags = uint8(int(flags))
 
 			iterations, err := strconv.ParseUint(parts[6], 10, 16)
 			if err != nil {
-				return nil, fmt.Errorf("invalid Iterations '%s' in NSEC3PARAMRecord record: %v", parts[6], err)
+				return nil, fmt.Errorf("invalid Iterations '%s' in NSEC3PARAMRecord r: %v", parts[6], err)
 			}
-			record.Iterations = uint16(int(iterations))
+			r.Iterations = uint16(int(iterations))
 
 			saltLength, err := strconv.ParseUint(parts[7], 10, 8)
 			if err != nil {
 				if parts[7] == "-" {
 					saltLength = 0
 				} else {
-					return nil, fmt.Errorf("invalid Salt Length '%s' in NSEC3PARAMRecord record: %v", parts[7], err)
+					return nil, fmt.Errorf("invalid Salt Length '%s' in NSEC3PARAMRecord r: %v", parts[7], err)
 				}
 			}
-			record.SaltLength = uint8(int(saltLength))
+			r.SaltLength = uint8(int(saltLength))
 
 		} else if rrsigNsecParamRegex.MatchString(line) {
-			rrsigRecord, err := NewRRSIGRecord(line)
+			rrsigParser := &RRSIGRecord{}
+			rrsigRecord, err := rrsigParser.Parse(line)
 			if err != nil {
 				return nil, err
 			}
-			record.RRSIG = rrsigRecord
+			r.RRSIG = rrsigRecord.(*RRSIGRecord)
 		}
 	}
-	return record, nil
+	return r, nil
+}
+
+// Compare checks the equality between two instances of NSEC3PARAMRecord.
+// This function is useful for testing and validation purposes.
+//
+// Parameters:
+// - b: A reference to another instance for comparison.
+//
+// Returns:
+//   - bool: Returns true if the corresponding properties of 'a' and 'b' are equal,
+//     otherwise, returns false.
+func (r *NSEC3PARAMRecord) Compare(b *NSEC3PARAMRecord) bool {
+	return r.TTL == b.TTL &&
+		r.HashAlgorithm == b.HashAlgorithm &&
+		r.Flags == b.Flags &&
+		r.Iterations == b.Iterations &&
+		r.SaltLength == b.SaltLength &&
+		r.Validated == b.Validated &&
+		r.RRSIG.Compare(b.RRSIG)
 }

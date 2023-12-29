@@ -42,13 +42,17 @@ func TestNewDNSKEYRecordOK(t *testing.T) {
 		},
 		RawResponse: response,
 	}
-
-	dnsKeyRecord, err := NewDNSKEYRecord(response)
+	r := &DNSKEYResponse{}
+	result, err := r.Parse(response)
 	if err != nil {
 		t.Fatalf("Failed to parse DNSKEY record: %v", err)
 	}
+	dnsKeyRecord, ok := result.(*DNSKEYResponse)
+	if !ok {
+		t.Fatalf("Result is not a *DNSKEYResponse")
+	}
 
-	if !compareDSKEYResponses(dnsKeyRecord, expected) {
+	if !dnsKeyRecord.Compare(expected) {
 		t.Errorf("Parsed record %+v does not match expected %+v", dnsKeyRecord, expected)
 	}
 
@@ -57,41 +61,16 @@ func TestNewDNSKEYRecordOK(t *testing.T) {
 func TestNewDNSKEYRecordNoDNSSEC(t *testing.T) {
 	response := badDNSKeyResponse
 
-	dnskeyResponse, err := NewDNSKEYRecord(response)
-	if err == nil {
-		t.Fatalf("Expected resolution failed error, got nil")
-	}
-	if dnskeyResponse != nil {
-		t.Fatalf("Expected nil DNSKEY response, got %+v", dnskeyResponse)
+	r := &DNSKEYResponse{}
+	dnsKeyRecord, err := r.Parse(response)
+
+	if dnsKeyRecord != nil {
+		t.Fatalf("Expected nil DNSKEY response, got %+v", dnsKeyRecord)
 	}
 
 	if !strings.Contains(err.Error(), "resolution failed") {
 		t.Errorf("Expected error to contain 'resolution failed', got: %v", err)
 	}
-}
-
-func compareDNSKEYRecords(a, b *DNSKEYRecord) bool {
-	return a.Flags == b.Flags &&
-		a.Protocol == b.Protocol &&
-		a.Algorithm == b.Algorithm &&
-		a.PublicKey == b.PublicKey &&
-		a.KeyType == b.KeyType &&
-		a.AlgorithmName == b.AlgorithmName &&
-		a.KeyID == b.KeyID
-}
-
-func compareDSKEYResponses(a, b *DNSKEYResponse) bool {
-	if len(a.Records) != len(b.Records) {
-		return false
-	}
-	for i := range a.Records {
-		if !compareDNSKEYRecords(&a.Records[i], &b.Records[i]) {
-			return false
-		}
-	}
-	return a.Validated == b.Validated &&
-		compareRRSIGRecords(a.RRSIG, b.RRSIG) &&
-		a.RawResponse == b.RawResponse
 }
 
 const goodDNSKeyResponse = `; fully validated

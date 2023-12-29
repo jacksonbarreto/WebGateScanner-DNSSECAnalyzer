@@ -44,7 +44,7 @@ type SOARecord struct {
 	RawResponse string
 }
 
-// NewSOARecord creates a new SOARecord struct from a raw DNS response string.
+// Parse creates a new SOARecord struct from a raw DNS response string.
 // The function parses the response string, which is expected to be obtained from
 // a DNS query using the 'delv' command-line tool, and populates an SOARecord struct
 // with the parsed information. An SOA (Start of Authority) record contains essential
@@ -69,7 +69,7 @@ type SOARecord struct {
 //
 // Example Usage:
 //
-//	soaRecord, err := NewSOARecord(rawDelvResponse)
+//	soaRecord, err := Parse(rawDelvResponse)
 //	if err != nil {
 //	    // Handle error
 //	}
@@ -81,73 +81,98 @@ type SOARecord struct {
 //	which is used for DNS diagnostics and troubleshooting. It assumes that the input string is
 //	in the format provided by 'delv'. The function may not work correctly with responses from
 //	other tools or in different formats.
-func NewSOARecord(response string) (*SOARecord, error) {
+func (r *SOARecord) Parse(response string) (DNSRecordResult, error) {
 	lines := strings.Split(response, "\n")
 	if strings.Contains(response, "resolution failed") {
 		return nil, fmt.Errorf("resolution failed: %s", lines[0])
 	}
-	record := &SOARecord{}
-	record.RawResponse = response
+	r.RawResponse = response
 	soaRegex := regexp.MustCompile(`\bIN\s+SOA\b`)
 	rrsigRegex := regexp.MustCompile(`\bRRSIG\s+SOA\b`)
 
 	for _, line := range lines {
 		if strings.HasPrefix(line, "; fully validated") {
-			record.Validated = true
+			r.Validated = true
 		} else if strings.HasPrefix(line, "; unsigned answer") {
-			record.Validated = false
+			r.Validated = false
 		} else if soaRegex.MatchString(line) {
 			parts := strings.Fields(line)
 			if len(parts) < 11 {
-				return nil, errors.New("invalid SOA record format")
+				return nil, errors.New("invalid SOA r format")
 			}
 
-			record.PrimaryNS = strings.TrimSuffix(parts[4], ".")
+			r.PrimaryNS = strings.TrimSuffix(parts[4], ".")
 
 			contact := strings.TrimSuffix(parts[5], ".")
 			firstDotIndex := strings.Index(contact, ".")
 			if firstDotIndex != -1 {
 				contact = contact[:firstDotIndex] + "@" + contact[firstDotIndex+1:]
 			}
-			record.Contact = contact
+			r.Contact = contact
 
 			serial, err := strconv.ParseUint(parts[6], 10, 32)
 			if err != nil {
-				return nil, fmt.Errorf("invalid serial number '%s' in SOA record: %v", parts[6], err)
+				return nil, fmt.Errorf("invalid serial number '%s' in SOA r: %v", parts[6], err)
 			}
-			record.Serial = uint32(serial)
+			r.Serial = uint32(serial)
 
 			refresh, err := strconv.ParseUint(parts[7], 10, 32)
 			if err != nil {
-				return nil, fmt.Errorf("invalid refresh time '%s' in SOA record: %v", parts[7], err)
+				return nil, fmt.Errorf("invalid refresh time '%s' in SOA r: %v", parts[7], err)
 			}
-			record.Refresh = uint32(refresh)
+			r.Refresh = uint32(refresh)
 
 			retry, err := strconv.ParseUint(parts[8], 10, 32)
 			if err != nil {
-				return nil, fmt.Errorf("invalid retry time '%s' in SOA record: %v", parts[8], err)
+				return nil, fmt.Errorf("invalid retry time '%s' in SOA r: %v", parts[8], err)
 			}
-			record.Retry = uint32(retry)
+			r.Retry = uint32(retry)
 
 			expire, err := strconv.ParseUint(parts[9], 10, 32)
 			if err != nil {
-				return nil, fmt.Errorf("invalid expire time '%s' in SOA record: %v", parts[9], err)
+				return nil, fmt.Errorf("invalid expire time '%s' in SOA r: %v", parts[9], err)
 			}
-			record.Expire = uint32(expire)
+			r.Expire = uint32(expire)
 
 			minimum, err := strconv.ParseUint(parts[10], 10, 32)
 			if err != nil {
-				return nil, fmt.Errorf("invalid minimum time '%s' in SOA record: %v", parts[10], err)
+				return nil, fmt.Errorf("invalid minimum time '%s' in SOA r: %v", parts[10], err)
 			}
-			record.Minimum = uint32(minimum)
+			r.Minimum = uint32(minimum)
 		} else if rrsigRegex.MatchString(line) {
-			rrsigRecord, err := NewRRSIGRecord(line)
+			rrsigParser := &RRSIGRecord{}
+			rrsigRecord, err := rrsigParser.Parse(line)
 			if err != nil {
 				return nil, err
 			}
-			record.RRSIG = rrsigRecord
+			r.RRSIG = rrsigRecord.(*RRSIGRecord)
 		}
 	}
 
-	return record, nil
+	return r, nil
+}
+
+// Compare checks the equality between two instances of SOARecord.
+// This function is useful for testing and validation purposes.
+//
+// Parameters:
+// - b: A reference to another instance for comparison.
+//
+// Returns:
+//   - bool: Returns true if the corresponding properties of 'a' and 'b' are equal,
+//     otherwise, returns false.
+func (r *SOARecord) Compare(b *SOARecord) bool {
+	rrsigEqual := (r.RRSIG == nil && b.RRSIG == nil) ||
+		(r.RRSIG != nil && b.RRSIG != nil && r.RRSIG.Compare(b.RRSIG))
+
+	return r.PrimaryNS == b.PrimaryNS &&
+		r.Contact == b.Contact &&
+		r.Serial == b.Serial &&
+		r.Refresh == b.Refresh &&
+		r.Retry == b.Retry &&
+		r.Expire == b.Expire &&
+		r.Minimum == b.Minimum &&
+		r.Validated == b.Validated &&
+		rrsigEqual &&
+		r.RawResponse == b.RawResponse
 }

@@ -37,20 +37,26 @@ func TestNewDSRecordOK(t *testing.T) {
 		RawResponse: response,
 	}
 
-	dsRecord, err := NewDSRecord(response)
+	dsResponse := DSResponse{}
+	dsRecordResult, err := dsResponse.Parse(response)
 	if err != nil {
 		t.Fatalf("Failed to parse DS record: %v", err)
 	}
 
-	if !compareDSResponses(dsRecord, expected) {
+	dsRecord, ok := dsRecordResult.(*DSResponse)
+	if !ok {
+		t.Fatalf("Result is not a *DSResponse")
+	}
+
+	if !dsRecord.Compare(expected) {
 		t.Errorf("Parsed record %+v does not match expected %+v", dsRecord, expected)
 	}
 }
 
 func TestNewDSRecordNoDNSSEC(t *testing.T) {
 	response := badResponse
-
-	dsRecord, err := NewDSRecord(response)
+	dsResponse := DSResponse{}
+	dsRecord, err := dsResponse.Parse(response)
 	if err == nil {
 		t.Fatalf("Expected resolution failed error, got nil")
 	}
@@ -61,27 +67,6 @@ func TestNewDSRecordNoDNSSEC(t *testing.T) {
 	if !strings.Contains(err.Error(), "resolution failed") {
 		t.Errorf("Expected error to contain 'resolution failed', got: %v", err)
 	}
-}
-
-func compareDSRecords(a, b *DSRecord) bool {
-	return a.KeyTag == b.KeyTag &&
-		a.Algorithm == b.Algorithm &&
-		a.DigestType == b.DigestType &&
-		a.Digest == b.Digest
-}
-
-func compareDSResponses(a, b *DSResponse) bool {
-	if len(a.Records) != len(b.Records) {
-		return false
-	}
-	for i := range a.Records {
-		if !compareDSRecords(&a.Records[i], &b.Records[i]) {
-			return false
-		}
-	}
-	return a.Validated == b.Validated &&
-		compareRRSIGRecords(a.RRSIG, b.RRSIG) &&
-		a.RawResponse == b.RawResponse
 }
 
 const goodResponse = `; fully validated

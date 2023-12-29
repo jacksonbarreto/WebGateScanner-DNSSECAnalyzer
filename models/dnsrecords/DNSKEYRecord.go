@@ -67,7 +67,7 @@ type DNSKEYResponse struct {
 	RawResponse string
 }
 
-// NewDNSKEYRecord parses a raw DNS response string and creates a new DNSKEYResponse struct.
+// Parse parses a raw DNS response string and creates a new DNSKEYResponse struct.
 // This function is designed to work with the output of the 'delv' command-line tool specifically
 // for DNSKEY queries within the context of DNSSEC. The parsed information is used to populate
 // a DNSKEYResponse struct, which represents a structured interpretation of the DNSKEY records
@@ -93,7 +93,7 @@ type DNSKEYResponse struct {
 //
 // Example Usage:
 //
-//	dnskeyResponse, err := NewDNSKEYRecord(rawDelvResponse)
+//	dnskeyResponse, err := Parse(rawDelvResponse)
 //	if err != nil {
 //	    // Handle error
 //	}
@@ -105,43 +105,42 @@ type DNSKEYResponse struct {
 //	which is used for DNSSEC diagnostics and troubleshooting. The function assumes that the input
 //	string is in the format provided by 'delv' and may not work correctly with responses from
 //	other tools or in different formats.
-func NewDNSKEYRecord(response string) (*DNSKEYResponse, error) {
+func (r *DNSKEYResponse) Parse(response string) (DNSRecordResult, error) {
 	lines := strings.Split(response, "\n")
 	if strings.Contains(response, "resolution failed") {
 		return nil, fmt.Errorf("resolution failed: %s", lines[0])
 	}
-	record := &DNSKEYResponse{}
-	record.RawResponse = response
+	r.RawResponse = response
 	dnsKeyRegex := regexp.MustCompile(`\bIN\s+DNSKEY\b`)
 	rrsigRegex := regexp.MustCompile(`\bRRSIG\s+DNSKEY\b`)
 
 	for _, line := range lines {
 		if strings.HasPrefix(line, "; fully validated") {
-			record.Validated = true
+			r.Validated = true
 		} else if strings.HasPrefix(line, "; unsigned answer") {
-			record.Validated = false
+			r.Validated = false
 		} else if dnsKeyRegex.MatchString(line) {
 			dnskeyRecord := &DNSKEYRecord{}
 			parts := strings.Fields(line)
 			if len(parts) < 8 {
-				return nil, fmt.Errorf("invalid DNSKEY record: %s", line)
+				return nil, fmt.Errorf("invalid DNSKEY r: %s", line)
 			}
 
 			flags, err := strconv.ParseUint(parts[4], 10, 16)
 			if err != nil {
-				return nil, fmt.Errorf("invalid flags '%s' in DNSKEY record: %v", parts[4], err)
+				return nil, fmt.Errorf("invalid flags '%s' in DNSKEY r: %v", parts[4], err)
 			}
 			dnskeyRecord.Flags = uint16(int(flags))
 
 			protocol, err := strconv.ParseUint(parts[5], 10, 8)
 			if err != nil {
-				return nil, fmt.Errorf("invalid protocol '%s' in DNSKEY record: %v", parts[5], err)
+				return nil, fmt.Errorf("invalid protocol '%s' in DNSKEY r: %v", parts[5], err)
 			}
 			dnskeyRecord.Protocol = uint8(int(protocol))
 
 			algorithm, err := strconv.ParseUint(parts[6], 10, 8)
 			if err != nil {
-				return nil, fmt.Errorf("invalid algorithm '%s' in DNSKEY record: %v", parts[6], err)
+				return nil, fmt.Errorf("invalid algorithm '%s' in DNSKEY r: %v", parts[6], err)
 			}
 			dnskeyRecord.Algorithm = uint8(algorithm)
 
@@ -153,7 +152,7 @@ func NewDNSKEYRecord(response string) (*DNSKEYResponse, error) {
 					} else if strings.Contains(comment, "key id =") {
 						keyID, err := strconv.ParseUint(strings.TrimSpace(strings.Split(comment, "=")[1]), 10, 16)
 						if err != nil {
-							return nil, fmt.Errorf("invalid key id '%s' in DNSKEY record: %v", strings.TrimSpace(strings.Split(comment, "=")[1]), err)
+							return nil, fmt.Errorf("invalid key id '%s' in DNSKEY r: %v", strings.TrimSpace(strings.Split(comment, "=")[1]), err)
 						}
 						dnskeyRecord.KeyID = uint16(int(keyID))
 					} else if strings.Contains(comment, "ZSK") || strings.Contains(comment, "KSK") {
@@ -161,17 +160,17 @@ func NewDNSKEYRecord(response string) (*DNSKEYResponse, error) {
 						if len(keyTypeParts) > 0 {
 							dnskeyRecord.KeyType = keyTypeParts[0]
 						} else {
-							return nil, fmt.Errorf("invalid key type '%s' in DNSKEY record: %v", comment, err)
+							return nil, fmt.Errorf("invalid key type '%s' in DNSKEY r: %v", comment, err)
 						}
 					}
 				}
 			} else {
-				return nil, fmt.Errorf("invalid DNSKEY record: %s", line)
+				return nil, fmt.Errorf("invalid DNSKEY r: %s", line)
 			}
 
 			semicolonIndex := strings.Index(line, ";")
 			if semicolonIndex == -1 {
-				return nil, fmt.Errorf("missing ';' in DNSKEY record: %s", line)
+				return nil, fmt.Errorf("missing ';' in DNSKEY r: %s", line)
 			}
 
 			publicKeyParts := parts[7:]
@@ -183,14 +182,57 @@ func NewDNSKEYRecord(response string) (*DNSKEYResponse, error) {
 			}
 			dnskeyRecord.PublicKey = strings.Join(publicKeyParts, "")
 
-			record.Records = append(record.Records, *dnskeyRecord)
+			r.Records = append(r.Records, *dnskeyRecord)
 		} else if rrsigRegex.MatchString(line) {
-			rrsigRecord, err := NewRRSIGRecord(line)
+			rrsigParser := &RRSIGRecord{}
+			rrsigRecord, err := rrsigParser.Parse(line)
 			if err != nil {
 				return nil, err
 			}
-			record.RRSIG = rrsigRecord
+			r.RRSIG = rrsigRecord.(*RRSIGRecord)
 		}
 	}
-	return record, nil
+	return r, nil
+}
+
+// Compare checks the equality between two instances of DNSKEYRecord.
+// This function is useful for testing and validation purposes.
+//
+// Parameters:
+// - b: A reference to another instance for comparison.
+//
+// Returns:
+//   - bool: Returns true if the corresponding properties of 'a' and 'b' are equal,
+//     otherwise, returns false.
+func (r *DNSKEYRecord) Compare(b *DNSKEYRecord) bool {
+	return r.Flags == b.Flags &&
+		r.Protocol == b.Protocol &&
+		r.Algorithm == b.Algorithm &&
+		r.PublicKey == b.PublicKey &&
+		r.KeyType == b.KeyType &&
+		r.AlgorithmName == b.AlgorithmName &&
+		r.KeyID == b.KeyID
+}
+
+// Compare checks the equality between two instances of DNSKEYResponse.
+// This function is useful for testing and validation purposes.
+//
+// Parameters:
+// - b: A reference to another instance for comparison.
+//
+// Returns:
+//   - bool: Returns true if the corresponding properties of 'a' and 'b' are equal,
+//     otherwise, returns false.
+func (r *DNSKEYResponse) Compare(b *DNSKEYResponse) bool {
+	if len(r.Records) != len(b.Records) {
+		return false
+	}
+	for i := range r.Records {
+		if !r.Records[i].Compare(&b.Records[i]) {
+			return false
+		}
+	}
+	return r.Validated == b.Validated &&
+		r.RRSIG.Compare(b.RRSIG) &&
+		r.RawResponse == b.RawResponse
 }

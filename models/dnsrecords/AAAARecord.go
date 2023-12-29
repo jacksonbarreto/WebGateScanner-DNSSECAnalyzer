@@ -51,7 +51,7 @@ type AAAAResponse struct {
 	RawResponse string
 }
 
-// NewAAAARecord parses a raw DNS response string and creates a new AAAAResponse struct.
+// Parse parses a raw DNS response string and creates a new AAAAResponse struct.
 // This function is specifically designed to work with the output of the 'delv' command-line tool
 // for AAAA queries. The AAAA query is used to resolve a domain name to its IPv6 address.
 // The parsed information from the 'delv' response is used to populate a AAAAResponse struct,
@@ -77,7 +77,7 @@ type AAAAResponse struct {
 //
 // Example Usage:
 //
-//	aaaaResponse, err := NewAAAARecord(rawDelvResponse)
+//	aaaaResponse, err := Parse(rawDelvResponse)
 //	if err != nil {
 //	    // Handle error
 //	}
@@ -89,43 +89,79 @@ type AAAAResponse struct {
 //	which is commonly used for DNS diagnostics and troubleshooting. The function assumes that the input
 //	string is in the format provided by 'delv' and may not work correctly with responses from
 //	other tools or in different formats.
-func NewAAAARecord(response string) (*AAAAResponse, error) {
+func (r *AAAAResponse) Parse(response string) (DNSRecordResult, error) {
 	lines := strings.Split(response, "\n")
 	if strings.Contains(response, "resolution failed") {
 		return nil, fmt.Errorf("resolution failed: %s", lines[0])
 	}
-	record := &AAAAResponse{}
-	record.RawResponse = response
+	r.RawResponse = response
 	aaaaRegex := regexp.MustCompile(`\bIN\s+AAAA\b`)
 	rrsigRegex := regexp.MustCompile(`\bRRSIG\s+AAAA\b`)
 
 	for _, line := range lines {
 		if strings.HasPrefix(line, "; fully validated") {
-			record.Validated = true
+			r.Validated = true
 		} else if strings.HasPrefix(line, "; unsigned answer") {
-			record.Validated = false
+			r.Validated = false
 		} else if aaaaRegex.MatchString(line) {
 			aaaaRecord := &AAAARecord{}
 			parts := strings.Fields(line)
 			if len(parts) < 5 {
-				return nil, fmt.Errorf("invalid AAAA record: %s", line)
+				return nil, fmt.Errorf("invalid AAAA r: %s", line)
 			}
 			ttl, err := strconv.ParseUint(parts[1], 10, 32)
 			if err != nil {
-				return nil, fmt.Errorf("invalid TTL '%s' in AAAA record: %v", parts[1], err)
+				return nil, fmt.Errorf("invalid TTL '%s' in AAAA r: %v", parts[1], err)
 			}
 			aaaaRecord.OriginalTTL = uint32(int(ttl))
 
 			aaaaRecord.IPv6 = parts[4]
-			record.Records = append(record.Records, *aaaaRecord)
+			r.Records = append(r.Records, *aaaaRecord)
 		} else if rrsigRegex.MatchString(line) {
-			rrsigRecord, err := NewRRSIGRecord(line)
+			rrsigParser := &RRSIGRecord{}
+			rrsigRecord, err := rrsigParser.Parse(line)
 			if err != nil {
 				return nil, err
 			}
-			record.RRSIG = rrsigRecord
+			r.RRSIG = rrsigRecord.(*RRSIGRecord)
 		}
 	}
 
-	return record, nil
+	return r, nil
+}
+
+// Compare checks the equality between two instances of AAAARecord.
+// This function is useful for testing and validation purposes.
+//
+// Parameters:
+// - b: A reference to another instance for comparison.
+//
+// Returns:
+//   - bool: Returns true if the corresponding properties of 'a' and 'b' are equal,
+//     otherwise, returns false.
+func (r *AAAARecord) Compare(b *AAAARecord) bool {
+	return r.IPv6 == b.IPv6
+}
+
+// Compare checks the equality between two instances of AAAAResponse.
+// This function is useful for testing and validation purposes.
+//
+// Parameters:
+// - b: A reference to another instance for comparison.
+//
+// Returns:
+//   - bool: Returns true if the corresponding properties of 'a' and 'b' are equal,
+//     otherwise, returns false.
+func (r *AAAAResponse) Compare(b *AAAAResponse) bool {
+	if len(r.Records) != len(b.Records) {
+		return false
+	}
+	for i := range r.Records {
+		if !r.Records[i].Compare(&b.Records[i]) {
+			return false
+		}
+	}
+	return r.Validated == b.Validated &&
+		r.RRSIG.Compare(b.RRSIG) &&
+		r.RawResponse == b.RawResponse
 }

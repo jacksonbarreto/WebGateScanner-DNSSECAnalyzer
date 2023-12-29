@@ -80,14 +80,24 @@ func NewDNSNegationInfo(responseNSEC string, responseNSEC3Param string) (*DNSNeg
 	dnsNegationInfo.RawResponse.NSEC = responseNSEC
 	dnsNegationInfo.RawResponse.NSEC3Param = responseNSEC3Param
 
-	nsecRecord, err := NewNSECRecord(responseNSEC)
+	r := &NSECRecord{}
+	result, err := r.Parse(responseNSEC)
+	nsecRecord, ok := result.(*NSECRecord)
+	if !ok {
+		return nil, err
+	}
 	if err != nil {
 		dnsNegationInfo.NSEC = nil
 	} else {
 		dnsNegationInfo.NSEC = nsecRecord
 	}
 
-	nsec3paramRecord, err := NewNSEC3PARAMRecord(responseNSEC3Param)
+	rr := &NSEC3PARAMRecord{}
+	result, err = rr.Parse(responseNSEC3Param)
+	nsec3paramRecord, ok := result.(*NSEC3PARAMRecord)
+	if !ok {
+		return nil, err
+	}
 	if err != nil {
 		dnsNegationInfo.NSEC3Param = nil
 	} else {

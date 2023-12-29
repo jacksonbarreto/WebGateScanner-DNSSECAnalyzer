@@ -17,13 +17,17 @@ func TestNewRRSIGRecord(t *testing.T) {
 		SignerName:  "uminho.pt",
 		Signature:   "ZysOlFWuqRItdxt59+BbS+iMTyrM35fu1r1Lgds/ooCFwKORRkmnpmZoFa2qg8E1lxvEkmVjh1AkXMi+d3Lnls8JhO0MDe6OFrRsRhQg170D5sWJ3nleX0In72eBZDRl3zOO7c8z+KE5S+/K+DVvQ6SDcj2D6EqYWUss9NsS2Mk=",
 	}
-
-	rrsigRecord, err := NewRRSIGRecord(testLine)
+	r := &RRSIGRecord{}
+	rrsigRecordResult, err := r.Parse(testLine)
 	if err != nil {
 		t.Fatalf("Failed to parse RRSIG record: %v", err)
 	}
+	rrsigRecord, ok := rrsigRecordResult.(*RRSIGRecord)
+	if !ok {
+		t.Fatalf("Result is not a *RRSIGRecord")
+	}
 
-	if !compareRRSIGRecords(rrsigRecord, expected) {
+	if !rrsigRecord.Compare(expected) {
 		t.Errorf("Parsed record %+v does not match expected %+v", rrsigRecord, expected)
 	}
 }

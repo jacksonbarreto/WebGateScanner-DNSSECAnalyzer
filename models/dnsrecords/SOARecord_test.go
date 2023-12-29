@@ -32,13 +32,17 @@ uminho.pt.              14400   IN      RRSIG   SOA 5 2 14400 20240114000002 202
 		},
 		RawResponse: response,
 	}
-
-	soaRecord, err := NewSOARecord(response)
+	r := &SOARecord{}
+	result, err := r.Parse(response)
 	if err != nil {
 		t.Fatalf("Failed to parse SOA record: %v", err)
 	}
+	soaRecord, ok := result.(*SOARecord)
+	if !ok {
+		t.Fatalf("Result is not a *SOARecord")
+	}
 
-	if !compareSOARecords(soaRecord, expected) {
+	if !soaRecord.Compare(expected) {
 		t.Errorf("Parsed record %+v does not match expected %+v", soaRecord, expected)
 	}
 }
@@ -59,13 +63,17 @@ ipvc.pt.                21600   IN      SOA     ns3.ipvc.pt. si.ipvc.pt. 2023121
 		RRSIG:       nil,
 		RawResponse: response,
 	}
-
-	soaRecord, err := NewSOARecord(response)
+	r := &SOARecord{}
+	result, err := r.Parse(response)
 	if err != nil {
 		t.Fatalf("Failed to parse SOA record without DNSSEC: %v", err)
 	}
+	soaRecord, ok := result.(*SOARecord)
+	if !ok {
+		t.Fatalf("Result is not a *SOARecord")
+	}
 
-	if !compareSOARecords(soaRecord, expected) {
+	if !soaRecord.Compare(expected) {
 		t.Errorf("Parsed record %+v does not match expected %+v", soaRecord, expected)
 	}
 }
@@ -83,7 +91,8 @@ func TestNewSOARecordResolutionFailed(t *testing.T) {
 ; PCTPFDAMBNVNP7A29HJ4PLCNTIHBFKBK.pt. RRSIG NSEC3 ...
 ; PCTPFDAMBNVNP7A29HJ4PLCNTIHBFKBK.pt. NSEC3 1 1 10 D115 PD356TUO7HSQBQ1L6QPTCDRI8T10BR5P NS SOA RRSIG DNSKEY NSEC3PARAMRecord`
 
-	soaRecord, err := NewSOARecord(response)
+	r := &SOARecord{}
+	soaRecord, err := r.Parse(response)
 	if err == nil {
 		t.Fatalf("Expected resolution failed error, got nil")
 	}
@@ -95,20 +104,4 @@ func TestNewSOARecordResolutionFailed(t *testing.T) {
 	if !strings.Contains(err.Error(), "resolution failed") {
 		t.Errorf("Expected error to contain 'resolution failed', got: %v", err)
 	}
-}
-
-func compareSOARecords(a, b *SOARecord) bool {
-	rrsigEqual := (a.RRSIG == nil && b.RRSIG == nil) ||
-		(a.RRSIG != nil && b.RRSIG != nil && compareRRSIGRecords(a.RRSIG, b.RRSIG))
-
-	return a.PrimaryNS == b.PrimaryNS &&
-		a.Contact == b.Contact &&
-		a.Serial == b.Serial &&
-		a.Refresh == b.Refresh &&
-		a.Retry == b.Retry &&
-		a.Expire == b.Expire &&
-		a.Minimum == b.Minimum &&
-		a.Validated == b.Validated &&
-		rrsigEqual &&
-		a.RawResponse == b.RawResponse
 }

@@ -26,23 +26,32 @@ func TestNewNSEC3ParamRecordGoodResponse(t *testing.T) {
 			Signature:   "+mydY1Cl3PzERN0rA54wl7JnUdxyVio9ygJVkZWgqtsSNHzUGQpywBtPdwmRNIHInyBoeDlXrw/lRjrD9aCTmA==",
 		},
 	}
-
-	nsecRecord, err := NewNSEC3PARAMRecord(response)
+	r := &NSEC3PARAMRecord{}
+	result, err := r.Parse(response)
 	if err != nil {
 		t.Fatalf("Failed to parse NSEC3Param record: %v", err)
 	}
 
-	if !compareNSEC3ParamRecords(nsecRecord, expected) {
+	nsecRecord, ok := result.(*NSEC3PARAMRecord)
+	if !ok {
+		t.Fatalf("Result is not a *NSEC3PARAMRecord")
+	}
+
+	if !nsecRecord.Compare(expected) {
 		t.Errorf("Parsed record %+v does not match expected %+v", nsecRecord, expected)
 	}
 }
 
 func TestNewNSEC3ParamRecordBadResponse(t *testing.T) {
 	response := badNsec3ParamResponse
-
-	nsecRecord, err := NewNSEC3PARAMRecord(response)
+	r := &NSEC3PARAMRecord{}
+	result, err := r.Parse(response)
 	if err == nil {
 		t.Fatalf("Expected resolution failed error, got nil")
+	}
+	nsecRecord, ok := result.(*NSEC3PARAMRecord)
+	if ok {
+		t.Fatalf("Expected nil NSEC3Param response, got %+v", nsecRecord)
 	}
 	if nsecRecord != nil {
 		t.Fatalf("Expected nil NSEC3Param response, got %+v", nsecRecord)
@@ -51,16 +60,6 @@ func TestNewNSEC3ParamRecordBadResponse(t *testing.T) {
 	if !strings.Contains(err.Error(), "resolution failed") {
 		t.Errorf("Expected error to contain 'resolution failed', got: %v", err)
 	}
-}
-
-func compareNSEC3ParamRecords(a, b *NSEC3PARAMRecord) bool {
-	return a.TTL == b.TTL &&
-		a.HashAlgorithm == b.HashAlgorithm &&
-		a.Flags == b.Flags &&
-		a.Iterations == b.Iterations &&
-		a.SaltLength == b.SaltLength &&
-		a.Validated == b.Validated &&
-		compareRRSIGRecords(a.RRSIG, b.RRSIG)
 }
 
 const goodNsec3ParamResponse = `; fully validated

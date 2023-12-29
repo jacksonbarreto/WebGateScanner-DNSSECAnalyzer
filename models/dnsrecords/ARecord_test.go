@@ -27,13 +27,18 @@ func TestNewARecordOK(t *testing.T) {
 		},
 		RawResponse: response,
 	}
-
-	aRecord, err := NewARecord(response)
+	r := &AResponse{}
+	result, err := r.Parse(response)
 	if err != nil {
 		t.Fatalf("Failed to parse A record: %v", err)
 	}
 
-	if !compareAResponses(aRecord, expected) {
+	aRecord, ok := result.(*AResponse)
+	if !ok {
+		t.Fatalf("Result is not a *AResponse")
+	}
+
+	if !aRecord.Compare(expected) {
 		t.Errorf("Parsed record %+v does not match expected %+v", aRecord, expected)
 	}
 }
@@ -52,33 +57,20 @@ func TestNewARecordNoDNSSEC(t *testing.T) {
 		RRSIG:       nil,
 		RawResponse: response,
 	}
-
-	aRecord, err := NewARecord(response)
+	r := &AResponse{}
+	result, err := r.Parse(response)
 	if err != nil {
 		t.Fatalf("Failed to parse A record: %v", err)
 	}
 
-	if !compareAResponses(aRecord, expected) {
+	aRecord, ok := result.(*AResponse)
+	if !ok {
+		t.Fatalf("Result is not a *AResponse")
+	}
+
+	if !aRecord.Compare(expected) {
 		t.Errorf("Parsed record %+v does not match expected %+v", aRecord, expected)
 	}
-}
-
-func compareARecords(a, b *ARecord) bool {
-	return a.IPv4 == b.IPv4
-}
-
-func compareAResponses(a, b *AResponse) bool {
-	if len(a.Records) != len(b.Records) {
-		return false
-	}
-	for i := range a.Records {
-		if !compareARecords(&a.Records[i], &b.Records[i]) {
-			return false
-		}
-	}
-	return a.Validated == b.Validated &&
-		compareRRSIGRecords(a.RRSIG, b.RRSIG) &&
-		a.RawResponse == b.RawResponse
 }
 
 const goodAResponse = `; fully validated

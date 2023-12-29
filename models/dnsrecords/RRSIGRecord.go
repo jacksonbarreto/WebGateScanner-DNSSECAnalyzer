@@ -32,7 +32,7 @@ type RRSIGRecord struct {
 	Signature   string
 }
 
-func NewRRSIGRecord(rrsigLine string) (*RRSIGRecord, error) {
+func (r *RRSIGRecord) Parse(rrsigLine string) (DNSRecordResult, error) {
 	parts := strings.Fields(rrsigLine)
 	if len(parts) < 13 {
 		return nil, errors.New("invalid RRSIG record format")
@@ -93,4 +93,33 @@ func parseTime(timeStr string) (int64, error) {
 		return 0, err
 	}
 	return t.Unix(), nil
+}
+
+// Compare checks the equality between two instances of RRSIGRecord.
+// This function is useful for testing and validation purposes.
+//
+// Parameters:
+// - b: A reference to another instance for comparison.
+//
+// Returns:
+//   - bool: Returns true if the corresponding properties of 'a' and 'b' are equal,
+//     otherwise, returns false.
+func (r *RRSIGRecord) Compare(b *RRSIGRecord) bool {
+	if r == nil && b == nil {
+		return true
+	}
+
+	if r == nil || b == nil {
+		return false
+	}
+
+	return r.TypeCovered == b.TypeCovered &&
+		r.Algorithm == b.Algorithm &&
+		r.Labels == b.Labels &&
+		r.OriginalTTL == b.OriginalTTL &&
+		r.Expiration == b.Expiration &&
+		r.Inception == b.Inception &&
+		r.KeyTag == b.KeyTag &&
+		r.SignerName == b.SignerName &&
+		r.Signature == b.Signature
 }
