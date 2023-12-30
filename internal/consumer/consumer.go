@@ -13,7 +13,7 @@ type Consumer struct {
 	consumerGroupHandler sarama.ConsumerGroupHandler
 }
 
-func NewConsumer(brokers []string, group string, topics []string, consumerHandler sarama.ConsumerGroupHandler) (*Consumer, error) {
+func NewConsumer(brokers []string, group string, topics []string, consumerGroupHandler sarama.ConsumerGroupHandler) (*Consumer, error) {
 	configConsumerGroup := sarama.NewConfig()
 	configConsumerGroup.Version = sarama.V2_0_0_0
 	configConsumerGroup.Consumer.Return.Errors = true
@@ -25,18 +25,18 @@ func NewConsumer(brokers []string, group string, topics []string, consumerHandle
 		return nil, err
 	}
 
-	return &Consumer{consumerGroup: consumer, topics: topics, consumerGroupHandler: consumerHandler}, nil
+	return &Consumer{consumerGroup: consumer, topics: topics, consumerGroupHandler: consumerGroupHandler}, nil
 }
 
-// TODO: Analyze if this function work with multiple messages in the same scanner
-
-func NewConsumerDefault(scanner sarama.ConsumerGroupHandler) (*Consumer, error) {
+func NewConsumerDefault(consumerGroupHandler sarama.ConsumerGroupHandler) (*Consumer, error) {
 	kafkaConfig := config.Kafka()
 	brokerList := kafkaConfig.Brokers
 	groupID := kafkaConfig.GroupID
 	topics := kafkaConfig.TopicsConsumer
-	return NewConsumer(brokerList, groupID, topics, scanner)
+	return NewConsumer(brokerList, groupID, topics, consumerGroupHandler)
 }
+
+// TODO: Analyze if this function work with multiple messages in the same scanner
 
 func (c *Consumer) Consume() error {
 	handler := c.consumerGroupHandler
