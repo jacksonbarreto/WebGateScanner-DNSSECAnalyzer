@@ -4,10 +4,11 @@ go 1.21.0
 
 require (
 	github.com/IBM/sarama v1.42.1
-	github.com/jacksonbarreto/stls v0.0.0-20231210152653-df0e334b5be3
+	github.com/spf13/viper v1.18.1
 )
 
 require (
+	bou.ke/monkey v1.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/eapache/go-resiliency v1.4.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20230731223053-c322873962e3 // indirect
@@ -35,7 +36,6 @@ require (
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.18.1 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
