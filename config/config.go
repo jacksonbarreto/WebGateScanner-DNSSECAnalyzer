@@ -14,6 +14,7 @@ type Config struct {
 type AppConfig struct {
 	Environment string
 	Id          string
+	DNSServer   string
 }
 
 type KafkaConfig struct {
