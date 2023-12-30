@@ -15,10 +15,10 @@ type AnalysisConsumerGroupHandler struct {
 	producer    *producer.Producer
 	Topics      []string
 	TopicsError []string
-	Log         *logservice.Logger
+	Log         logservice.Logger
 }
 
-func NewAnalysisConsumerGroupHandler(scanner *scanner.Scanner, producer *producer.Producer, topics, topicsError []string, logService *logservice.Logger) *AnalysisConsumerGroupHandler {
+func NewAnalysisConsumerGroupHandler(scanner *scanner.Scanner, producer *producer.Producer, topics, topicsError []string, logService logservice.Logger) *AnalysisConsumerGroupHandler {
 	return &AnalysisConsumerGroupHandler{
 		scanner:     scanner,
 		producer:    producer,
