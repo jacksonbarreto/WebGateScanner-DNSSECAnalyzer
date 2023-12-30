@@ -28,5 +28,6 @@ USER dnssecanalyser
 COPY --from=builder /app/cmd/dnssecanalyser/app /dnssecanalyser/app
 COPY --from=builder /app/config.yaml /dnssecanalyser/config.yaml
 
+WORKDIR /dnssecanalyser/
 # Run the compiled binary
 CMD ["/dnssecanalyser/app"]
