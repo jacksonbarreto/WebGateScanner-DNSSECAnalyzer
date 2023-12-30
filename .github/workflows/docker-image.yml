@@ -31,7 +31,7 @@ jobs:
         run: |
           go mod download
           go test -v ./...
-  build:
+ build:
     name: Build and Push Docker Image
     needs: test
     runs-on: ubuntu-latest
