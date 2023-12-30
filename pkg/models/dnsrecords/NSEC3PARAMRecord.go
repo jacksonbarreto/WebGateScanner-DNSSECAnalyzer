@@ -33,6 +33,7 @@ import (
 //
 //	RRSIG: A pointer to an RRSIGRecord struct containing the DNSSEC signature for the NSEC3PARAM record.
 //	       This field may be nil if DNSSEC is not used or if the record is not signed.
+//	RawResponse: The raw text of the DNS response containing the NSEC3PARAM (NSEC3 Parameters) record.
 type NSEC3PARAMRecord struct {
 	TTL           uint32
 	HashAlgorithm uint8
@@ -41,6 +42,7 @@ type NSEC3PARAMRecord struct {
 	SaltLength    uint8
 	Validated     bool
 	RRSIG         *RRSIGRecord
+	RawResponse   string
 }
 
 // Parse parses a raw DNS response string and creates a new NSEC3PARAMRecord struct.
@@ -85,7 +87,7 @@ func (r *NSEC3PARAMRecord) Parse(response string) (DNSRecordResult, error) {
 	if strings.Contains(response, "resolution failed") {
 		return nil, fmt.Errorf("resolution failed: %s", lines[0])
 	}
-
+	r.RawResponse = response
 	nsec3ParamRegex := regexp.MustCompile(`\bIN\s+NSEC3PARAM\b`)
 	rrsigNsecParamRegex := regexp.MustCompile(`\bRRSIG\s+NSEC3PARAM\b`)
 
@@ -161,7 +163,8 @@ func (r *NSEC3PARAMRecord) Compare(b *NSEC3PARAMRecord) bool {
 		r.Iterations == b.Iterations &&
 		r.SaltLength == b.SaltLength &&
 		r.Validated == b.Validated &&
-		r.RRSIG.Compare(b.RRSIG)
+		r.RRSIG.Compare(b.RRSIG) &&
+		r.RawResponse == b.RawResponse
 }
 
 // String returns a formatted string representation of the NSEC3PARAMRecord.
@@ -189,7 +192,8 @@ func (r *NSEC3PARAMRecord) String() string {
 			"  Iterations: %d\n"+
 			"  Salt Length: %d\n"+
 			"  Validated: %s\n"+
-			"  RRSIG: %s\n",
+			"  RRSIG: %s\n"+
+			"  Raw Response: %s\n",
 		r.TTL,
 		r.HashAlgorithm,
 		r.Flags,
@@ -197,5 +201,6 @@ func (r *NSEC3PARAMRecord) String() string {
 		r.SaltLength,
 		validatedStr,
 		rrsigStr,
+		r.RawResponse,
 	)
 }
