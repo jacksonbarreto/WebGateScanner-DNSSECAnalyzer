@@ -23,6 +23,7 @@ func TestNewNSECRecordGoodResponse(t *testing.T) {
 			SignerName:  "ipb.pt",
 			Signature:   "XhwuwEZiiohAhkTOMuk5+dyBD/yhJatUXHvIArt05t8FA7YYGJGHuwZM24cfumpHxXBgVlRWTuYnFlJbmaPBtqDoYQs4txw0UsIuFXo1lAdK713OMUp4lWlkf04hJC4LWRiDvZg2k/glXSo077O3Fyg5VYjU/YpTNyR4DbgJDGo=",
 		},
+		RawResponse: response,
 	}
 	r := &NSECRecord{}
 	result, err := r.Parse(response)

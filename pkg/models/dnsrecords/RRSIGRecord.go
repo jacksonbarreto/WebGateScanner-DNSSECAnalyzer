@@ -32,6 +32,43 @@ type RRSIGRecord struct {
 	Signature   string
 }
 
+// Parse extracts information from a raw textual representation of an RRSIG record
+// and populates the fields of the RRSIGRecord struct. This method is designed to
+// parse a single line of RRSIG record data, typically obtained from a DNS response
+// or diagnostic tool output (e.g., 'delv').
+//
+// Parameters:
+//
+//	rrsigLine: A string representing a single line of RRSIG record data.
+//	           The format of this line should follow the standard RRSIG record format,
+//	           containing fields such as Type Covered, Algorithm, Labels, Original TTL,
+//	           Expiration, Inception, Key Tag, Signer's Name, and Signature.
+//
+// Returns:
+//
+//	DNSRecordResult: A struct that implements the DNSRecordResult interface, specifically
+//	                 an *RRSIGRecord struct, populated with the parsed data from the RRSIG line.
+//	                 This return type allows for flexibility in handling different DNS record types.
+//
+//	error: An error object that indicates any issues encountered during the parsing of the RRSIG line.
+//	       If the parsing is successful, the error is nil. If parsing fails due to incorrect format,
+//	       invalid values, or any other reason, the error provides details about the cause of the failure.
+//
+// Example Usage:
+//
+//	// Assume 'rrsigLine' is a string containing an RRSIG record
+//	rrsigRecord, err := (&RRSIGRecord{}).Parse(rrsigLine)
+//	if err != nil {
+//	    // Handle error
+//	}
+//	// Use rrsigRecord for DNSSEC validation or other purposes
+//
+// Note:
+//
+//   - The method expects the input string to be in a specific format, closely aligned with the standard
+//     RRSIG record representation. Deviations from this format may lead to parsing errors.
+//   - This method is particularly useful when dealing with DNS diagnostic tools' outputs or raw DNS responses
+//     where RRSIG records are presented in textual format.
 func (r *RRSIGRecord) Parse(rrsigLine string) (DNSRecordResult, error) {
 	parts := strings.Fields(rrsigLine)
 	if len(parts) < 13 {
@@ -122,4 +159,31 @@ func (r *RRSIGRecord) Compare(b *RRSIGRecord) bool {
 		r.KeyTag == b.KeyTag &&
 		r.SignerName == b.SignerName &&
 		r.Signature == b.Signature
+}
+
+// String returns a formatted string representation of the RRSIGRecord.
+// This method implements the fmt.Stringer interface so that the RRSIGRecord
+// is printed in a human-readable form, rather than just displaying the pointer.
+func (r *RRSIGRecord) String() string {
+	return fmt.Sprintf(
+		"RRSIGRecord:\n"+
+			"  Type Covered: %s\n"+
+			"  Algorithm: %d\n"+
+			"  Labels: %d\n"+
+			"  Original TTL: %d\n"+
+			"  Expiration: %s\n"+
+			"  Inception: %s\n"+
+			"  Key Tag: %d\n"+
+			"  Signer Name: %s\n"+
+			"  Signature: %s\n",
+		r.TypeCovered,
+		r.Algorithm,
+		r.Labels,
+		r.OriginalTTL,
+		time.Unix(int64(r.Expiration), 0).Format(time.RFC3339),
+		time.Unix(int64(r.Inception), 0).Format(time.RFC3339),
+		r.KeyTag,
+		r.SignerName,
+		r.Signature,
+	)
 }

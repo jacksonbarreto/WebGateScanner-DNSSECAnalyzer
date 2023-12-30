@@ -176,3 +176,45 @@ func (r *SOARecord) Compare(b *SOARecord) bool {
 		rrsigEqual &&
 		r.RawResponse == b.RawResponse
 }
+
+// String returns a formatted string representation of the SOARecord.
+// This method provides a readable view of the SOA record's details, including primary name server, contact, serial number, and more.
+func (r *SOARecord) String() string {
+	if r == nil {
+		return "<null>"
+	}
+
+	validatedStr := "No"
+	if r.Validated {
+		validatedStr = "Yes"
+	}
+
+	rrsigStr := "<null>"
+	if r.RRSIG != nil {
+		rrsigStr = r.RRSIG.String()
+	}
+
+	return fmt.Sprintf(
+		"SOARecord:\n"+
+			"  Primary NS: %s\n"+
+			"  Contact: %s\n"+
+			"  Serial: %d\n"+
+			"  Refresh: %d\n"+
+			"  Retry: %d\n"+
+			"  Expire: %d\n"+
+			"  Minimum: %d\n"+
+			"  Validated: %s\n"+
+			"  RRSIG: %s\n"+
+			"  Raw Response: %s\n",
+		r.PrimaryNS,
+		r.Contact,
+		r.Serial,
+		r.Refresh,
+		r.Retry,
+		r.Expire,
+		r.Minimum,
+		validatedStr,
+		rrsigStr,
+		r.RawResponse,
+	)
+}

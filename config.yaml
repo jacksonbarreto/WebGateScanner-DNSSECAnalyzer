@@ -1,7 +1,8 @@
 App:
   Environment: "dev"
   Id: "DNS-ASSESSMENT"
-kafka:
+  DNSServer: "1.1.1.1"
+Kafka:
   Brokers: ["localhost:9092"]
   TopicsConsumer: ["security-assessment"]
   TopicsProducer: ["security-assessment"]

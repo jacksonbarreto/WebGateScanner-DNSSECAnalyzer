@@ -35,6 +35,26 @@ type DSRecord struct {
 	Digest     string
 }
 
+// String returns a formatted string representation of the DSRecord.
+// This method provides a readable view of the DS record's key tag, algorithm, digest type, and digest.
+func (r *DSRecord) String() string {
+	if r == nil {
+		return "<null>"
+	}
+
+	return fmt.Sprintf(
+		"DSRecord:\n"+
+			"  Key Tag: %d\n"+
+			"  Algorithm: %d\n"+
+			"  Digest Type: %d\n"+
+			"  Digest: %s\n",
+		r.KeyTag,
+		r.Algorithm,
+		r.DigestType,
+		r.Digest,
+	)
+}
+
 // DSResponse represents a complete response for a DNSSEC DS record query.
 // This includes potentially multiple DS records, a flag indicating whether
 // the response was validated, the RRSIG record for the response, and the
@@ -163,11 +183,11 @@ func (r *DSResponse) Parse(response string) (DNSRecordResult, error) {
 // Returns:
 //   - bool: Returns true if all properties of 'a' and 'b' are equal;
 //     otherwise, returns false.
-func (a *DSRecord) Compare(b *DSRecord) bool {
-	return a.KeyTag == b.KeyTag &&
-		a.Algorithm == b.Algorithm &&
-		a.DigestType == b.DigestType &&
-		a.Digest == b.Digest
+func (r *DSRecord) Compare(b *DSRecord) bool {
+	return r.KeyTag == b.KeyTag &&
+		r.Algorithm == b.Algorithm &&
+		r.DigestType == b.DigestType &&
+		r.Digest == b.Digest
 }
 
 // Compare checks the equality between two instances of DSResponse.
@@ -201,4 +221,39 @@ func (r *DSResponse) Compare(b *DSResponse) bool {
 	}
 
 	return r.Validated == b.Validated && r.RawResponse == b.RawResponse
+}
+
+// String returns a formatted string representation of the DSResponse.
+// It provides a human-readable view of the response, including the DS records, validation status, and raw response.
+func (r *DSResponse) String() string {
+	if r == nil {
+		return "<null>"
+	}
+
+	var recordsStr []string
+	for _, record := range r.Records {
+		recordsStr = append(recordsStr, record.String())
+	}
+
+	validatedStr := "No"
+	if r.Validated {
+		validatedStr = "Yes"
+	}
+
+	rrsigStr := "<null>"
+	if r.RRSIG != nil {
+		rrsigStr = r.RRSIG.String()
+	}
+
+	return fmt.Sprintf(
+		"DSResponse:\n"+
+			"  Records:\n    %s\n"+
+			"  Validated: %s\n"+
+			"  RRSIG: %s\n"+
+			"  Raw Response: %s\n",
+		strings.Join(recordsStr, "\n    "),
+		validatedStr,
+		rrsigStr,
+		r.RawResponse,
+	)
 }

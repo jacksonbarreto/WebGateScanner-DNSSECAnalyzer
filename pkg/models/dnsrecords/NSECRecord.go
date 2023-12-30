@@ -29,12 +29,14 @@ import (
 //
 //	RRSIG: A pointer to an RRSIGRecord struct containing the DNSSEC signature for the NSEC record.
 //	       This field may be nil if DNSSEC is not used or if the record is not signed.
+//	RawResponse: The raw text of the DNS response containing the NSEC (Next SECure) record.
 type NSECRecord struct {
 	TTL            uint32
 	NextDomainName string
 	Types          string
 	Validated      bool
 	RRSIG          *RRSIGRecord
+	RawResponse    string
 }
 
 // Parse parses a raw DNS response string and creates a new NSECRecord struct.
@@ -80,7 +82,7 @@ func (r *NSECRecord) Parse(response string) (DNSRecordResult, error) {
 	if strings.Contains(response, "resolution failed") {
 		return nil, fmt.Errorf("resolution failed: %s", lines[0])
 	}
-
+	r.RawResponse = response
 	nsecRegex := regexp.MustCompile(`\bIN\s+NSEC\b`)
 	rrsigRegex := regexp.MustCompile(`\bRRSIG\s+NSEC\b`)
 
@@ -128,5 +130,40 @@ func (r *NSECRecord) Compare(b *NSECRecord) bool {
 	return r.NextDomainName == b.NextDomainName &&
 		r.Types == b.Types &&
 		r.Validated == b.Validated &&
-		r.RRSIG.Compare(b.RRSIG)
+		r.RRSIG.Compare(b.RRSIG) &&
+		r.RawResponse == b.RawResponse
+}
+
+// String returns a formatted string representation of the NSECRecord.
+// This method provides a readable view of the NSEC record's details, including TTL, next domain name, and types.
+func (r *NSECRecord) String() string {
+	if r == nil {
+		return "<null>"
+	}
+
+	validatedStr := "No"
+	if r.Validated {
+		validatedStr = "Yes"
+	}
+
+	rrsigStr := "<null>"
+	if r.RRSIG != nil {
+		rrsigStr = r.RRSIG.String()
+	}
+
+	return fmt.Sprintf(
+		"NSECRecord:\n"+
+			"  TTL: %d\n"+
+			"  Next Domain Name: %s\n"+
+			"  Types: %s\n"+
+			"  Validated: %s\n"+
+			"  RRSIG: %s\n"+
+			"  Raw Response: %s\n",
+		r.TTL,
+		r.NextDomainName,
+		r.Types,
+		validatedStr,
+		rrsigStr,
+		r.RawResponse,
+	)
 }

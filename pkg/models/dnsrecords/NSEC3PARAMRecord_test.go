@@ -25,6 +25,7 @@ func TestNewNSEC3ParamRecordGoodResponse(t *testing.T) {
 			SignerName:  "nl",
 			Signature:   "+mydY1Cl3PzERN0rA54wl7JnUdxyVio9ygJVkZWgqtsSNHzUGQpywBtPdwmRNIHInyBoeDlXrw/lRjrD9aCTmA==",
 		},
+		RawResponse: response,
 	}
 	r := &NSEC3PARAMRecord{}
 	result, err := r.Parse(response)

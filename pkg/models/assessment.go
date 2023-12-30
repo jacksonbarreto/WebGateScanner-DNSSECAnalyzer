@@ -1,7 +1,7 @@
-package scanner
+package models
 
 import (
-	"github.com/jacksonbarreto/DNSSECAnalyzer/models/dnsrecords"
+	"github.com/jacksonbarreto/DNSSECAnalyzer/pkg/models/dnsrecords"
 	"time"
 )
 
