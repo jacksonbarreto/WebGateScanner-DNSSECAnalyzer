@@ -24,6 +24,18 @@ type ARecord struct {
 	OriginalTTL uint32
 }
 
+// String returns a formatted string representation of the ARecord.
+// This method implements the fmt.Stringer interface for pretty-printing the record.
+func (r *ARecord) String() string {
+	return fmt.Sprintf(
+		"ARecord:\n"+
+			"  IPv4 Address: %s\n"+
+			"  Original TTL: %d seconds\n",
+		r.IPv4,
+		r.OriginalTTL,
+	)
+}
+
 // AResponse represents the complete response for an A record query.
 // It includes a collection of A records, the validation status of the response,
 // any associated RRSIG record for DNSSEC validation, and the raw response received
@@ -165,4 +177,39 @@ func (r *AResponse) Compare(b *AResponse) bool {
 	return r.Validated == b.Validated &&
 		r.RRSIG.Compare(b.RRSIG) &&
 		r.RawResponse == b.RawResponse
+}
+
+// String returns a formatted string representation of the AResponse.
+// This method implements the fmt.Stringer interface for pretty-printing the response.
+func (r *AResponse) String() string {
+	if r == nil {
+		return "<null>"
+	}
+
+	var recordsStr []string
+	for _, record := range r.Records {
+		recordsStr = append(recordsStr, record.String())
+	}
+
+	validatedStr := "No"
+	if r.Validated {
+		validatedStr = "Yes"
+	}
+
+	rrsigStr := "<null>"
+	if r.RRSIG != nil {
+		rrsigStr = r.RRSIG.String()
+	}
+
+	return fmt.Sprintf(
+		"AResponse:\n"+
+			"  Records:\n    %s\n"+
+			"  Validated: %s\n"+
+			"  RRSIG: %s\n"+
+			"  Raw Response: %s\n",
+		strings.Join(recordsStr, "\n    "),
+		validatedStr,
+		rrsigStr,
+		r.RawResponse,
+	)
 }

@@ -163,3 +163,39 @@ func (r *NSEC3PARAMRecord) Compare(b *NSEC3PARAMRecord) bool {
 		r.Validated == b.Validated &&
 		r.RRSIG.Compare(b.RRSIG)
 }
+
+// String returns a formatted string representation of the NSEC3PARAMRecord.
+// This method provides a readable view of the NSEC3PARAM record's details, including TTL, hash algorithm, and more.
+func (r *NSEC3PARAMRecord) String() string {
+	if r == nil {
+		return "<null>"
+	}
+
+	validatedStr := "No"
+	if r.Validated {
+		validatedStr = "Yes"
+	}
+
+	rrsigStr := "<null>"
+	if r.RRSIG != nil {
+		rrsigStr = r.RRSIG.String()
+	}
+
+	return fmt.Sprintf(
+		"NSEC3PARAMRecord:\n"+
+			"  TTL: %d\n"+
+			"  Hash Algorithm: %d\n"+
+			"  Flags: %d\n"+
+			"  Iterations: %d\n"+
+			"  Salt Length: %d\n"+
+			"  Validated: %s\n"+
+			"  RRSIG: %s\n",
+		r.TTL,
+		r.HashAlgorithm,
+		r.Flags,
+		r.Iterations,
+		r.SaltLength,
+		validatedStr,
+		rrsigStr,
+	)
+}

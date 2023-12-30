@@ -42,6 +42,32 @@ type DNSKEYRecord struct {
 	KeyID         uint16
 }
 
+// String returns a formatted string representation of the DNSKEYRecord.
+// It includes details like flags, protocol, algorithm, and the public key.
+func (r *DNSKEYRecord) String() string {
+	if r == nil {
+		return "<null>"
+	}
+
+	return fmt.Sprintf(
+		"DNSKEYRecord:\n"+
+			"  Flags: %d\n"+
+			"  Protocol: %d\n"+
+			"  Algorithm: %d\n"+
+			"  Public Key: %s\n"+
+			"  Key Type: %s\n"+
+			"  Algorithm Name: %s\n"+
+			"  Key ID: %d\n",
+		r.Flags,
+		r.Protocol,
+		r.Algorithm,
+		r.PublicKey,
+		r.KeyType,
+		r.AlgorithmName,
+		r.KeyID,
+	)
+}
+
 // DNSKEYResponse represents the complete response for a DNSKEY query.
 // It includes a collection of DNSKEY records, the validation status of the response,
 // any associated RRSIG record, and the raw response received from the DNS server.
@@ -235,4 +261,39 @@ func (r *DNSKEYResponse) Compare(b *DNSKEYResponse) bool {
 	return r.Validated == b.Validated &&
 		r.RRSIG.Compare(b.RRSIG) &&
 		r.RawResponse == b.RawResponse
+}
+
+// String returns a formatted string representation of the DNSKEYResponse.
+// It provides a human-readable view of the response, including the records, validation status, and raw response.
+func (r *DNSKEYResponse) String() string {
+	if r == nil {
+		return "<null>"
+	}
+
+	var recordsStr []string
+	for _, record := range r.Records {
+		recordsStr = append(recordsStr, record.String())
+	}
+
+	validatedStr := "No"
+	if r.Validated {
+		validatedStr = "Yes"
+	}
+
+	rrsigStr := "<null>"
+	if r.RRSIG != nil {
+		rrsigStr = r.RRSIG.String()
+	}
+
+	return fmt.Sprintf(
+		"DNSKEYResponse:\n"+
+			"  Records:\n    %s\n"+
+			"  Validated: %s\n"+
+			"  RRSIG: %s\n"+
+			"  Raw Response: %s\n",
+		strings.Join(recordsStr, "\n    "),
+		validatedStr,
+		rrsigStr,
+		r.RawResponse,
+	)
 }

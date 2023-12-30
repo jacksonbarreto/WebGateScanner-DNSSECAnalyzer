@@ -130,3 +130,35 @@ func (r *NSECRecord) Compare(b *NSECRecord) bool {
 		r.Validated == b.Validated &&
 		r.RRSIG.Compare(b.RRSIG)
 }
+
+// String returns a formatted string representation of the NSECRecord.
+// This method provides a readable view of the NSEC record's details, including TTL, next domain name, and types.
+func (r *NSECRecord) String() string {
+	if r == nil {
+		return "<null>"
+	}
+
+	validatedStr := "No"
+	if r.Validated {
+		validatedStr = "Yes"
+	}
+
+	rrsigStr := "<null>"
+	if r.RRSIG != nil {
+		rrsigStr = r.RRSIG.String()
+	}
+
+	return fmt.Sprintf(
+		"NSECRecord:\n"+
+			"  TTL: %d\n"+
+			"  Next Domain Name: %s\n"+
+			"  Types: %s\n"+
+			"  Validated: %s\n"+
+			"  RRSIG: %s\n",
+		r.TTL,
+		r.NextDomainName,
+		r.Types,
+		validatedStr,
+		rrsigStr,
+	)
+}
