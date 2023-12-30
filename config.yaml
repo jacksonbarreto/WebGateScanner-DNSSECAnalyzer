@@ -1,7 +1,9 @@
 App:
-  environment: "dev"
+  Environment: "dev"
+  Id: "DNS-ASSESSMENT"
 kafka:
-  brokers: ["localhost:9092"]
-  topicsConsumer: ["security-assessment"]
-  topicsProducer: ["security-assessment"]
-  groupID: "security-assessment-ingestion-group"
+  Brokers: ["localhost:9092"]
+  TopicsConsumer: ["security-assessment"]
+  TopicsProducer: ["security-assessment"]
+  TopicsError: ["security-assessment-error"]
+  GroupID: "security-assessment-ingestion-group"
