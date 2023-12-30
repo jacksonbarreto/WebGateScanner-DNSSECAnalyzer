@@ -20,6 +20,9 @@ RUN go build -ldflags="-w -s" -o app ./main.go
 # Stage 2: running the application
 FROM alpine:3.19
 
+# Install bind-tools (delv)
+RUN apk add --no-cache bind-tools
+
 # Add a non-root user
 RUN adduser -D dnssecanalyser
 USER dnssecanalyser
