@@ -1,4 +1,4 @@
-package scanner
+package models
 
 import (
 	"github.com/jacksonbarreto/DNSSECAnalyzer/pkg/models/dnsrecords"

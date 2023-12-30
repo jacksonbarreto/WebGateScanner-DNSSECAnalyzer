@@ -7,6 +7,7 @@ import (
 	"github.com/jacksonbarreto/DNSSECAnalyzer/internal/producer"
 	"github.com/jacksonbarreto/DNSSECAnalyzer/internal/scanner"
 	"github.com/jacksonbarreto/DNSSECAnalyzer/pkg/logservice"
+	"github.com/jacksonbarreto/DNSSECAnalyzer/pkg/models"
 	"github.com/jacksonbarreto/DNSSECAnalyzer/pkg/models/kafkaModels"
 )
 
@@ -72,7 +73,7 @@ func (h *AnalysisConsumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroup
 	return nil
 }
 
-func createKafkaMessage(result *scanner.Assessment) (string, error) {
+func createKafkaMessage(result *models.Assessment) (string, error) {
 	jsonData, err := json.Marshal(result)
 	if err != nil {
 		return "", err

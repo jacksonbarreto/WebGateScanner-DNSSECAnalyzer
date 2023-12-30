@@ -1,4 +1,4 @@
-package scanner
+package models
 
 import (
 	"bou.ke/monkey"
