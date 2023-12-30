@@ -16,7 +16,7 @@ func main() {
 
 	result, err := dnsScanner.Scan("www.ipb.pt")
 	if err != nil {
-		log.Printf("Scan failed")
+		log.Printf("error no scan: %v", err)
 	}
 	log.Print(result)
 
