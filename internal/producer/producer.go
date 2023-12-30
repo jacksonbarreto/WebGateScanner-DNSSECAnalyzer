@@ -2,6 +2,7 @@ package producer
 
 import (
 	"github.com/IBM/sarama"
+	"github.com/jacksonbarreto/DNSSECAnalyzer/config"
 	"log"
 )
 
@@ -10,18 +11,24 @@ type Producer struct {
 }
 
 func NewProducer(brokers []string) (*Producer, error) {
-	config := sarama.NewConfig()
-	config.Producer.Return.Successes = true
-	config.Producer.RequiredAcks = sarama.WaitForAll
-	config.Producer.Retry.Max = 5
+	configSarama := sarama.NewConfig()
+	configSarama.Producer.Return.Successes = true
+	configSarama.Producer.RequiredAcks = sarama.WaitForAll
+	configSarama.Producer.Retry.Max = 5
 
-	syncProducer, err := sarama.NewSyncProducer(brokers, config)
+	syncProducer, err := sarama.NewSyncProducer(brokers, configSarama)
 	if err != nil {
 		log.Printf("Failed to create Kafka producer: %v", err)
 		return nil, err
 	}
 
 	return &Producer{syncProducer: syncProducer}, nil
+}
+
+func NewProducerDefault() (*Producer, error) {
+	kafkaConfig := config.Kafka()
+	brokerList := kafkaConfig.Brokers
+	return NewProducer(brokerList)
 }
 
 func (p *Producer) SendMessage(topic string, message string) (partition int32, offset int64, err error) {
