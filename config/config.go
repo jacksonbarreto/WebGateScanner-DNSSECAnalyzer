@@ -13,12 +13,14 @@ type Config struct {
 
 type AppConfig struct {
 	Environment string
+	Id          string
 }
 
 type KafkaConfig struct {
 	Brokers        []string
 	TopicsConsumer []string
 	TopicsProducer []string
+	TopicsError    []string
 	GroupID        string
 }
 
