@@ -5,6 +5,7 @@ import (
 	"github.com/jacksonbarreto/DNSSECAnalyzer/internal/consumer"
 	"github.com/jacksonbarreto/DNSSECAnalyzer/internal/producer"
 	"github.com/jacksonbarreto/DNSSECAnalyzer/internal/scanner"
+	"log"
 )
 
 const configFilePath = ""
@@ -17,6 +18,12 @@ func main() {
 		panic(producerErr)
 	}
 	handler := consumer.NewAnalysisConsumerGroupHandlerDefault(dnsScanner, kafkaProducer)
+
+	result, err := dnsScanner.Scan("www.ipb.pt")
+	if err != nil {
+		log.Printf("Scan failed")
+	}
+	log.Print(result)
 
 	kafkaConsumer, consumerErr := consumer.NewConsumerDefault(handler)
 	if consumerErr != nil {
