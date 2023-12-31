@@ -26,7 +26,7 @@ import (
 //	Iterations: An unsigned 16-bit integer representing the number of additional times the hash
 //	            is performed. A higher number increases the difficulty of reversing the hash.
 //
-//	SaltLength: An unsigned 8-bit integer indicating the length of the salt value used in the hash.
+//	Salt: An unsigned 8-bit integer indicating the length of the salt value used in the hash.
 //
 //	Validated: A boolean flag indicating whether the NSEC3PARAM record has been validated
 //	           using DNSSEC validation procedures. True if validated, false otherwise.
@@ -39,7 +39,7 @@ type NSEC3PARAMRecord struct {
 	HashAlgorithm uint8
 	Flags         uint8
 	Iterations    uint16
-	SaltLength    uint8
+	Salt          uint8
 	Validated     bool
 	RRSIG         *RRSIGRecord
 	RawResponse   string
@@ -133,7 +133,7 @@ func (r *NSEC3PARAMRecord) Parse(response string) (DNSRecordResult, error) {
 					return nil, fmt.Errorf("invalid Salt Length '%s' in NSEC3PARAMRecord r: %v", parts[7], err)
 				}
 			}
-			r.SaltLength = uint8(int(saltLength))
+			r.Salt = uint8(int(saltLength))
 
 		} else if rrsigNsecParamRegex.MatchString(line) {
 			rrsigParser := &RRSIGRecord{}
@@ -161,7 +161,7 @@ func (r *NSEC3PARAMRecord) Compare(b *NSEC3PARAMRecord) bool {
 		r.HashAlgorithm == b.HashAlgorithm &&
 		r.Flags == b.Flags &&
 		r.Iterations == b.Iterations &&
-		r.SaltLength == b.SaltLength &&
+		r.Salt == b.Salt &&
 		r.Validated == b.Validated &&
 		r.RRSIG.Compare(b.RRSIG) &&
 		r.RawResponse == b.RawResponse
@@ -190,7 +190,7 @@ func (r *NSEC3PARAMRecord) String() string {
 			"  Hash Algorithm: %d\n"+
 			"  Flags: %d\n"+
 			"  Iterations: %d\n"+
-			"  Salt Length: %d\n"+
+			"  Salt: %d\n"+
 			"  Validated: %s\n"+
 			"  RRSIG: %s\n"+
 			"  Raw Response: %s\n",
@@ -198,7 +198,7 @@ func (r *NSEC3PARAMRecord) String() string {
 		r.HashAlgorithm,
 		r.Flags,
 		r.Iterations,
-		r.SaltLength,
+		r.Salt,
 		validatedStr,
 		rrsigStr,
 		r.RawResponse,

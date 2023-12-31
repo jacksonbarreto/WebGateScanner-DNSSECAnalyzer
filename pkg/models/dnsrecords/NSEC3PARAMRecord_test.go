@@ -12,7 +12,7 @@ func TestNewNSEC3ParamRecordGoodResponse(t *testing.T) {
 		HashAlgorithm: 1,
 		Flags:         0,
 		Iterations:    0,
-		SaltLength:    0,
+		Salt:          0,
 		Validated:     true,
 		RRSIG: &RRSIGRecord{
 			TypeCovered: "NSEC3PARAM",
