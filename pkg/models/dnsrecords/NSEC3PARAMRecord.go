@@ -13,33 +13,36 @@ import (
 //
 // Fields:
 //
-//	TTL: An unsigned 32-bit integer indicating the time-to-live (TTL) value of the NSEC3PARAM record.
-//	     Specifies the duration in seconds that the record may be cached before it should be
-//	     discarded or refreshed.
+//		TTL: An unsigned 32-bit integer indicating the time-to-live (TTL) value of the NSEC3PARAM record.
+//		     Specifies the duration in seconds that the record may be cached before it should be
+//		     discarded or refreshed.
 //
-//	HashAlgorithm: An unsigned 8-bit integer specifying the cryptographic hash algorithm used
-//	               to generate NSEC3 hashes. Common values are defined in DNSSEC standards.
+//		HashAlgorithm: An unsigned 8-bit integer specifying the cryptographic hash algorithm used
+//		               to generate NSEC3 hashes. Common values are defined in DNSSEC standards.
 //
-//	Flags: An unsigned 8-bit integer containing various flags relating to the NSEC3PARAM record.
-//	       These flags control certain aspects of NSEC3 processing.
+//		Flags: An unsigned 8-bit integer containing various flags relating to the NSEC3PARAM record.
+//		       These flags control certain aspects of NSEC3 processing.
 //
-//	Iterations: An unsigned 16-bit integer representing the number of additional times the hash
-//	            is performed. A higher number increases the difficulty of reversing the hash.
+//		Iterations: An unsigned 16-bit integer representing the number of additional times the hash
+//		            is performed. A higher number increases the difficulty of reversing the hash.
 //
-//	Salt: An unsigned 8-bit integer indicating the length of the salt value used in the hash.
+//		Salt: is represented as a sequence of case-insensitive
+//	     hexadecimal digits.  Whitespace is not allowed within the
+//	     sequence.  This field is represented as "-" (without the quotes)
+//	     when the Salt Length field is zero.
 //
-//	Validated: A boolean flag indicating whether the NSEC3PARAM record has been validated
-//	           using DNSSEC validation procedures. True if validated, false otherwise.
+//		Validated: A boolean flag indicating whether the NSEC3PARAM record has been validated
+//		           using DNSSEC validation procedures. True if validated, false otherwise.
 //
-//	RRSIG: A pointer to an RRSIGRecord struct containing the DNSSEC signature for the NSEC3PARAM record.
-//	       This field may be nil if DNSSEC is not used or if the record is not signed.
-//	RawResponse: The raw text of the DNS response containing the NSEC3PARAM (NSEC3 Parameters) record.
+//		RRSIG: A pointer to an RRSIGRecord struct containing the DNSSEC signature for the NSEC3PARAM record.
+//		       This field may be nil if DNSSEC is not used or if the record is not signed.
+//		RawResponse: The raw text of the DNS response containing the NSEC3PARAM (NSEC3 Parameters) record.
 type NSEC3PARAMRecord struct {
 	TTL           uint32
 	HashAlgorithm uint8
 	Flags         uint8
 	Iterations    uint16
-	Salt          uint8
+	Salt          string
 	Validated     bool
 	RRSIG         *RRSIGRecord
 	RawResponse   string
@@ -125,15 +128,7 @@ func (r *NSEC3PARAMRecord) Parse(response string) (DNSRecordResult, error) {
 			}
 			r.Iterations = uint16(int(iterations))
 
-			saltLength, err := strconv.ParseUint(parts[7], 10, 8)
-			if err != nil {
-				if parts[7] == "-" {
-					saltLength = 0
-				} else {
-					return nil, fmt.Errorf("invalid Salt Length '%s' in NSEC3PARAMRecord r: %v", parts[7], err)
-				}
-			}
-			r.Salt = uint8(int(saltLength))
+			r.Salt = parts[7]
 
 		} else if rrsigNsecParamRegex.MatchString(line) {
 			rrsigParser := &RRSIGRecord{}
@@ -190,7 +185,7 @@ func (r *NSEC3PARAMRecord) String() string {
 			"  Hash Algorithm: %d\n"+
 			"  Flags: %d\n"+
 			"  Iterations: %d\n"+
-			"  Salt: %d\n"+
+			"  Salt: %s\n"+
 			"  Validated: %s\n"+
 			"  RRSIG: %s\n"+
 			"  Raw Response: %s\n",

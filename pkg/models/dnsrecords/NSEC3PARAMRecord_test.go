@@ -5,14 +5,52 @@ import (
 	"testing"
 )
 
-func TestNewNSEC3ParamRecordGoodResponse(t *testing.T) {
+func TestNewNSEC3ParamRecordGoodResponseWithoutSalt(t *testing.T) {
 	response := goodNsec3ParamResponse
 	expected := &NSEC3PARAMRecord{
 		TTL:           0,
 		HashAlgorithm: 1,
 		Flags:         0,
 		Iterations:    0,
-		Salt:          0,
+		Salt:          "-",
+		Validated:     true,
+		RRSIG: &RRSIGRecord{
+			TypeCovered: "NSEC3PARAM",
+			Algorithm:   13,
+			Labels:      1,
+			OriginalTTL: 0,
+			Expiration:  1704505090,
+			Inception:   1703254046,
+			KeyTag:      52707,
+			SignerName:  "nl",
+			Signature:   "+mydY1Cl3PzERN0rA54wl7JnUdxyVio9ygJVkZWgqtsSNHzUGQpywBtPdwmRNIHInyBoeDlXrw/lRjrD9aCTmA==",
+		},
+		RawResponse: response,
+	}
+	r := &NSEC3PARAMRecord{}
+	result, err := r.Parse(response)
+	if err != nil {
+		t.Fatalf("Failed to parse NSEC3Param record: %v", err)
+	}
+
+	nsecRecord, ok := result.(*NSEC3PARAMRecord)
+	if !ok {
+		t.Fatalf("Result is not a *NSEC3PARAMRecord")
+	}
+
+	if !nsecRecord.Compare(expected) {
+		t.Errorf("Parsed record %+v does not match expected %+v", nsecRecord, expected)
+	}
+}
+
+func TestNewNSEC3ParamRecordGoodResponseWithSalt(t *testing.T) {
+	response := goodNsec3ParamResponseWhitSalt
+	expected := &NSEC3PARAMRecord{
+		TTL:           0,
+		HashAlgorithm: 1,
+		Flags:         0,
+		Iterations:    10,
+		Salt:          "F421F357D6A519",
 		Validated:     true,
 		RRSIG: &RRSIGRecord{
 			TypeCovered: "NSEC3PARAM",
@@ -65,6 +103,10 @@ func TestNewNSEC3ParamRecordBadResponse(t *testing.T) {
 
 const goodNsec3ParamResponse = `; fully validated
 nl.                     0       IN      NSEC3PARAM 1 0 0 -
+nl.                     0       IN      RRSIG   NSEC3PARAM 13 1 0 20240106013810 20231222140726 52707 nl. +mydY1Cl3PzERN0rA54wl7JnUdxyVio9ygJVkZWgqtsSNHzUGQpywBtP dwmRNIHInyBoeDlXrw/lRjrD9aCTmA==`
+
+const goodNsec3ParamResponseWhitSalt = `; fully validated
+nl.                     0       IN      NSEC3PARAM 1 0 10 F421F357D6A519
 nl.                     0       IN      RRSIG   NSEC3PARAM 13 1 0 20240106013810 20231222140726 52707 nl. +mydY1Cl3PzERN0rA54wl7JnUdxyVio9ygJVkZWgqtsSNHzUGQpywBtP dwmRNIHInyBoeDlXrw/lRjrD9aCTmA==`
 
 const badNsec3ParamResponse = `;; resolution failed: ncache nxrrset
