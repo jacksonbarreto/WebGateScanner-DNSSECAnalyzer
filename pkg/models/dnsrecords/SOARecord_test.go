@@ -11,6 +11,7 @@ uminho.pt.              14400   IN      SOA     dns.uminho.pt. servicos.scom.umi
 uminho.pt.              14400   IN      RRSIG   SOA 5 2 14400 20240114000002 20231215000002 51330 uminho.pt. ZysOlFWuqRItdxt59+BbS+iMTyrM35fu1r1Lgds/ooCFwKORRkmnpmZo Fa2qg8E1lxvEkmVjh1AkXMi+d3Lnls8JhO0MDe6OFrRsRhQg170D5sWJ 3nleX0In72eBZDRl3zOO7c8z+KE5S+/K+DVvQ6SDcj2D6EqYWUss9NsS 2Mk=`
 
 	expected := &SOARecord{
+		TTL:       14400,
 		PrimaryNS: "dns.uminho.pt",
 		Contact:   "servicos@scom.uminho.pt",
 		Serial:    2023121501,
@@ -52,6 +53,7 @@ func TestNewSOARecordNoDNSSEC(t *testing.T) {
 ipvc.pt.                21600   IN      SOA     ns3.ipvc.pt. si.ipvc.pt. 2023121969 28800 7200 1209600 86400`
 
 	expected := &SOARecord{
+		TTL:         21600,
 		PrimaryNS:   "ns3.ipvc.pt",
 		Contact:     "si@ipvc.pt",
 		Serial:      2023121969,

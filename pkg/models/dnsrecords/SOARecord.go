@@ -15,6 +15,10 @@ import (
 //
 // Fields:
 //
+//	TTL: An unsigned 32-bit integer indicating the time-to-live (TTL) value of the SOA record.
+//	     Specifies the duration in seconds that the record may be cached before it should be
+//	     discarded or refreshed.
+//
 //	PrimaryNS: The primary name server for the DNS zone. This is typically the authoritative name server
 //	           that contains the original zone records.
 //	Contact: The email address of the administrative contact for the DNS zone.
@@ -32,6 +36,7 @@ import (
 //	       This field is nil if DNSSEC is not used or if the record is not signed.
 //	RawResponse: The raw text of the DNS response containing the SOA record.
 type SOARecord struct {
+	TTL         uint32
 	PrimaryNS   string
 	Contact     string
 	Serial      uint32
@@ -101,6 +106,12 @@ func (r *SOARecord) Parse(response string) (DNSRecordResult, error) {
 				return nil, errors.New("invalid SOA r format")
 			}
 
+			ttl, err := strconv.ParseUint(parts[1], 10, 32)
+			if err != nil {
+				return nil, fmt.Errorf("invalid TTL '%s' in SOA r: %v", parts[1], err)
+			}
+			r.TTL = uint32(ttl)
+
 			r.PrimaryNS = strings.TrimSuffix(parts[4], ".")
 
 			contact := strings.TrimSuffix(parts[5], ".")
@@ -166,6 +177,7 @@ func (r *SOARecord) Compare(b *SOARecord) bool {
 		(r.RRSIG != nil && b.RRSIG != nil && r.RRSIG.Compare(b.RRSIG))
 
 	return r.PrimaryNS == b.PrimaryNS &&
+		r.TTL == b.TTL &&
 		r.Contact == b.Contact &&
 		r.Serial == b.Serial &&
 		r.Refresh == b.Refresh &&
@@ -196,6 +208,7 @@ func (r *SOARecord) String() string {
 
 	return fmt.Sprintf(
 		"SOARecord:\n"+
+			"  TTL: %d\n"+
 			"  Primary NS: %s\n"+
 			"  Contact: %s\n"+
 			"  Serial: %d\n"+
@@ -206,6 +219,7 @@ func (r *SOARecord) String() string {
 			"  Validated: %s\n"+
 			"  RRSIG: %s\n"+
 			"  Raw Response: %s\n",
+		r.TTL,
 		r.PrimaryNS,
 		r.Contact,
 		r.Serial,
