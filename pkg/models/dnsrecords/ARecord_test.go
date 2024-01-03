@@ -9,8 +9,8 @@ func TestNewARecordOK(t *testing.T) {
 	expected := &AResponse{
 		Records: []ARecord{
 			{
-				IPv4:        "193.136.195.224",
-				OriginalTTL: 21600,
+				IPv4: "193.136.195.224",
+				TTL:  21600,
 			},
 		},
 		Validated: true,
@@ -49,8 +49,8 @@ func TestNewARecordNoDNSSEC(t *testing.T) {
 	expected := &AResponse{
 		Records: []ARecord{
 			{
-				IPv4:        "193.136.58.74",
-				OriginalTTL: 600,
+				IPv4: "193.136.58.74",
+				TTL:  600,
 			},
 		},
 		Validated:   false,

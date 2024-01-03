@@ -10,8 +10,8 @@ func TestNewAAAARecordOK(t *testing.T) {
 	expected := &AAAAResponse{
 		Records: []AAAARecord{
 			{
-				IPv6:        "2001:690:22c0:201::4",
-				OriginalTTL: 3600,
+				IPv6: "2001:690:22c0:201::4",
+				TTL:  3600,
 			},
 		},
 		Validated: true,
@@ -48,8 +48,8 @@ func TestNewAAAARecordNoDNSSEC(t *testing.T) {
 	expected := &AAAAResponse{
 		Records: []AAAARecord{
 			{
-				IPv6:        "2001:690:22c0:201::4",
-				OriginalTTL: 1800,
+				IPv6: "2001:690:22c0:201::4",
+				TTL:  1800,
 			},
 		},
 		Validated:   false,

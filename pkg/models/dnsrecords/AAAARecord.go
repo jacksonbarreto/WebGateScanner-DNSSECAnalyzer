@@ -16,12 +16,12 @@ import (
 //	IPv6: A string representing the IPv6 address associated with the domain name.
 //	      The address is in colon-separated hexadecimal format (e.g., "2001:0db8:85a3:0000:0000:8a2e:0370:7334").
 //
-//	OriginalTTL: An unsigned 32-bit integer indicating the original time-to-live (TTL) value
+//	TTL: An unsigned 32-bit integer indicating the original time-to-live (TTL) value
 //	             of the AAAA record. This value specifies the duration in seconds that the record
 //	             may be cached before it should be discarded or refreshed.
 type AAAARecord struct {
-	IPv6        string
-	OriginalTTL uint32
+	IPv6 string
+	TTL  uint32
 }
 
 // String returns a formatted string representation of the AAAARecord.
@@ -30,9 +30,9 @@ func (r *AAAARecord) String() string {
 	return fmt.Sprintf(
 		"ARecord:\n"+
 			"  IPv4 Address: %s\n"+
-			"  Original TTL: %d seconds\n",
+			"  TTL: %d seconds\n",
 		r.IPv6,
-		r.OriginalTTL,
+		r.TTL,
 	)
 }
 
@@ -125,7 +125,7 @@ func (r *AAAAResponse) Parse(response string) (DNSRecordResult, error) {
 			if err != nil {
 				return nil, fmt.Errorf("invalid TTL '%s' in AAAA r: %v", parts[1], err)
 			}
-			aaaaRecord.OriginalTTL = uint32(int(ttl))
+			aaaaRecord.TTL = uint32(int(ttl))
 
 			aaaaRecord.IPv6 = parts[4]
 			r.Records = append(r.Records, *aaaaRecord)

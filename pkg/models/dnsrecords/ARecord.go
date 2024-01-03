@@ -16,12 +16,12 @@ import (
 //	IPv4: A string representing the IPv4 address associated with the domain name.
 //	      The address is in dotted-decimal notation (e.g., "192.0.2.1").
 //
-//	OriginalTTL: An unsigned 32-bit integer indicating the original time-to-live (TTL) value
+//	TTL: An unsigned 32-bit integer indicating the original time-to-live (TTL) value
 //	             of the A record. This value specifies the duration in seconds that the record
 //	             may be cached before it should be discarded or refreshed.
 type ARecord struct {
-	IPv4        string
-	OriginalTTL uint32
+	IPv4 string
+	TTL  uint32
 }
 
 // String returns a formatted string representation of the ARecord.
@@ -30,9 +30,9 @@ func (r *ARecord) String() string {
 	return fmt.Sprintf(
 		"ARecord:\n"+
 			"  IPv4 Address: %s\n"+
-			"  Original TTL: %d seconds\n",
+			"  TTL: %d seconds\n",
 		r.IPv4,
-		r.OriginalTTL,
+		r.TTL,
 	)
 }
 
@@ -125,7 +125,7 @@ func (r *AResponse) Parse(response string) (DNSRecordResult, error) {
 			if err != nil {
 				return nil, fmt.Errorf("invalid TTL '%s' in A r: %v", parts[1], err)
 			}
-			aRecord.OriginalTTL = uint32(int(ttl))
+			aRecord.TTL = uint32(int(ttl))
 
 			aRecord.IPv4 = parts[4]
 			r.Records = append(r.Records, *aRecord)
