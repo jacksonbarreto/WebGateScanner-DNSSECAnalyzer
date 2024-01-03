@@ -10,12 +10,14 @@ func TestNewDSRecordOK(t *testing.T) {
 	expected := &DSResponse{
 		Records: []DSRecord{
 			{
+				TTL:        7200,
 				KeyTag:     36028,
 				Algorithm:  5,
 				DigestType: 1,
 				Digest:     "DF93A5A17FC9091F076137A6837C61DE997C80D6",
 			},
 			{
+				TTL:        7200,
 				KeyTag:     36028,
 				Algorithm:  5,
 				DigestType: 2,

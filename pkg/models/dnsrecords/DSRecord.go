@@ -13,6 +13,10 @@ import (
 //
 // Fields:
 //
+//	TTL: An unsigned 32-bit integer indicating the time-to-live (TTL) value of the DS record.
+//	     Specifies the duration in seconds that the record may be cached before it should be
+//	     discarded or refreshed.
+//
 //	KeyTag: A 16-bit identifier of the DNSKEY record in the child zone
 //	        that is used to sign the zone's DNS records. It is used to efficiently
 //	        locate the correct DNSKEY record in the child zone.
@@ -29,6 +33,7 @@ import (
 //	        (hash) of the DNSKEY record. The digest is calculated using the method
 //	        specified in the DigestType field.
 type DSRecord struct {
+	TTL        uint32
 	KeyTag     uint16
 	Algorithm  uint8
 	DigestType uint8
@@ -44,10 +49,12 @@ func (r *DSRecord) String() string {
 
 	return fmt.Sprintf(
 		"DSRecord:\n"+
+			"  TTL: %d\n"+
 			"  Key Tag: %d\n"+
 			"  Algorithm: %d\n"+
 			"  Digest Type: %d\n"+
 			"  Digest: %s\n",
+		r.TTL,
 		r.KeyTag,
 		r.Algorithm,
 		r.DigestType,
@@ -139,6 +146,12 @@ func (r *DSResponse) Parse(response string) (DNSRecordResult, error) {
 			if len(parts) < 8 {
 				return nil, fmt.Errorf("invalid DS r format: %s", line)
 			}
+
+			ttl, err := strconv.ParseUint(parts[1], 10, 32)
+			if err != nil {
+				return nil, fmt.Errorf("invalid TTL '%s' in DS r: %v", parts[1], err)
+			}
+			dsRecord.TTL = uint32(int(ttl))
 
 			keyTag, err := strconv.ParseUint(parts[4], 10, 16)
 			if err != nil {
