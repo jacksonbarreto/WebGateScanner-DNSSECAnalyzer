@@ -18,7 +18,7 @@ func TestNewARecordOK(t *testing.T) {
 			TypeCovered: "A",
 			Algorithm:   7,
 			Labels:      2,
-			OriginalTTL: 86400,
+			TTL:         86400,
 			Expiration:  1704931200,
 			Inception:   1703116800,
 			KeyTag:      45269,

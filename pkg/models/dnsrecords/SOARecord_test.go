@@ -23,7 +23,7 @@ uminho.pt.              14400   IN      RRSIG   SOA 5 2 14400 20240114000002 202
 			TypeCovered: "SOA",
 			Algorithm:   5,
 			Labels:      2,
-			OriginalTTL: 14400,
+			TTL:         14400,
 			Expiration:  1705190402,
 			Inception:   1702598402,
 			KeyTag:      51330,

@@ -29,7 +29,7 @@ func TestNewDSRecordOK(t *testing.T) {
 			TypeCovered: "DS",
 			Algorithm:   13,
 			Labels:      2,
-			OriginalTTL: 7200,
+			TTL:         7200,
 			Expiration:  1704540034,
 			Inception:   1703676034,
 			KeyTag:      30640,

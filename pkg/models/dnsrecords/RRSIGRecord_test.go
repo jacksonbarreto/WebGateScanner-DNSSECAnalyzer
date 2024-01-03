@@ -10,7 +10,7 @@ func TestNewRRSIGRecord(t *testing.T) {
 		TypeCovered: "SOA",
 		Algorithm:   5,
 		Labels:      2,
-		OriginalTTL: 14400,
+		TTL:         14400,
 		Expiration:  1705190402,
 		Inception:   1702598402,
 		KeyTag:      51330,
@@ -44,7 +44,7 @@ func compareRRSIGRecords(a, b *RRSIGRecord) bool {
 	return a.TypeCovered == b.TypeCovered &&
 		a.Algorithm == b.Algorithm &&
 		a.Labels == b.Labels &&
-		a.OriginalTTL == b.OriginalTTL &&
+		a.TTL == b.TTL &&
 		a.Expiration == b.Expiration &&
 		a.Inception == b.Inception &&
 		a.KeyTag == b.KeyTag &&

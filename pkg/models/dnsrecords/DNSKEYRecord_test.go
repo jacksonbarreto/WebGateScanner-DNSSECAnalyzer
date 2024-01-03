@@ -35,7 +35,7 @@ func TestNewDNSKEYRecordOK(t *testing.T) {
 			TypeCovered: "DNSKEY",
 			Algorithm:   7,
 			Labels:      2,
-			OriginalTTL: 86400,
+			TTL:         86400,
 			Expiration:  1704326400,
 			Inception:   1702512000,
 			KeyTag:      4410,

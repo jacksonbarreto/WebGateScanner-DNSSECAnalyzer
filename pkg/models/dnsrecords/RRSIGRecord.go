@@ -14,7 +14,7 @@ import (
 // TypeCovered: Type of the RRset that this RRSIG record covers (e.g., SOA, DS, DNSKEY).
 // Algorithm: Numerical identifier of the cryptographic algorithm used for the signature, as per RFC 4034.
 // Labels: Number of labels in the original RRSIG RR owner name.
-// OriginalTTL: Original TTL of the covered RRset, as it appears in the authoritative zone.
+// TTL: Original TTL of the covered RRset, as it appears in the authoritative zone.
 // Expiration: Expiration date of the signature, represented as a UNIX timestamp.
 // Inception: Inception date of the signature, also as a UNIX timestamp.
 // KeyTag: Identifier of the DNSKEY record that validates this signature.
@@ -24,7 +24,7 @@ type RRSIGRecord struct {
 	TypeCovered string
 	Algorithm   uint8
 	Labels      uint8
-	OriginalTTL uint32
+	TTL         uint32
 	Expiration  uint32
 	Inception   uint32
 	KeyTag      uint16
@@ -112,7 +112,7 @@ func (r *RRSIGRecord) Parse(rrsigLine string) (DNSRecordResult, error) {
 		TypeCovered: parts[4],
 		Algorithm:   uint8(algorithm),
 		Labels:      uint8(labels),
-		OriginalTTL: uint32(originalTTL),
+		TTL:         uint32(originalTTL),
 		Expiration:  uint32(expiration),
 		Inception:   uint32(inception),
 		KeyTag:      uint16(keyTag),
@@ -153,7 +153,7 @@ func (r *RRSIGRecord) Compare(b *RRSIGRecord) bool {
 	return r.TypeCovered == b.TypeCovered &&
 		r.Algorithm == b.Algorithm &&
 		r.Labels == b.Labels &&
-		r.OriginalTTL == b.OriginalTTL &&
+		r.TTL == b.TTL &&
 		r.Expiration == b.Expiration &&
 		r.Inception == b.Inception &&
 		r.KeyTag == b.KeyTag &&
@@ -170,7 +170,7 @@ func (r *RRSIGRecord) String() string {
 			"  Type Covered: %s\n"+
 			"  Algorithm: %d\n"+
 			"  Labels: %d\n"+
-			"  Original TTL: %d\n"+
+			"  TTL: %d\n"+
 			"  Expiration: %s\n"+
 			"  Inception: %s\n"+
 			"  Key Tag: %d\n"+
@@ -179,7 +179,7 @@ func (r *RRSIGRecord) String() string {
 		r.TypeCovered,
 		r.Algorithm,
 		r.Labels,
-		r.OriginalTTL,
+		r.TTL,
 		time.Unix(int64(r.Expiration), 0).Format(time.RFC3339),
 		time.Unix(int64(r.Inception), 0).Format(time.RFC3339),
 		r.KeyTag,
