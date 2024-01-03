@@ -10,6 +10,7 @@ func TestNewDNSKEYRecordOK(t *testing.T) {
 	expected := &DNSKEYResponse{
 		Records: []DNSKEYRecord{
 			{
+				TTL:           21600,
 				Flags:         256,
 				Protocol:      3,
 				Algorithm:     7,
@@ -19,6 +20,7 @@ func TestNewDNSKEYRecordOK(t *testing.T) {
 				KeyID:         45269,
 			},
 			{
+				TTL:           21600,
 				Flags:         257,
 				Protocol:      3,
 				Algorithm:     7,

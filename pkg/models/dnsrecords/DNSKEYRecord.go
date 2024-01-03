@@ -13,6 +13,10 @@ import (
 //
 // Fields:
 //
+//	TTL: An unsigned 32-bit integer indicating the time-to-live (TTL) value of the DNSKEY record.
+//	     Specifies the duration in seconds that the record may be cached before it should be
+//	     discarded or refreshed.
+//
 //	Flags: An unsigned 16-bit integer specifying operational parameters of the DNSKEY.
 //	       Common values include 256 (Zone Signing Key) and 257 (Key Signing Key).
 //
@@ -33,6 +37,7 @@ import (
 //	KeyID: An unsigned 16-bit integer representing the DNSKEY record's identification value,
 //	       often used to reference this key in related DNSSEC records like DS or RRSIG.
 type DNSKEYRecord struct {
+	TTL           uint32
 	Flags         uint16
 	Protocol      uint8
 	Algorithm     uint8
@@ -51,6 +56,7 @@ func (r *DNSKEYRecord) String() string {
 
 	return fmt.Sprintf(
 		"DNSKEYRecord:\n"+
+			"  TTL: %d\n"+
 			"  Flags: %d\n"+
 			"  Protocol: %d\n"+
 			"  Algorithm: %d\n"+
@@ -58,6 +64,7 @@ func (r *DNSKEYRecord) String() string {
 			"  Key Type: %s\n"+
 			"  Algorithm Name: %s\n"+
 			"  Key ID: %d\n",
+		r.TTL,
 		r.Flags,
 		r.Protocol,
 		r.Algorithm,
@@ -152,6 +159,12 @@ func (r *DNSKEYResponse) Parse(response string) (DNSRecordResult, error) {
 				return nil, fmt.Errorf("invalid DNSKEY r: %s", line)
 			}
 
+			ttl, err := strconv.ParseUint(parts[1], 10, 32)
+			if err != nil {
+				return nil, fmt.Errorf("invalid TTL '%s' in DNSKEY r: %v", parts[1], err)
+			}
+			dnskeyRecord.TTL = uint32(int(ttl))
+
 			flags, err := strconv.ParseUint(parts[4], 10, 16)
 			if err != nil {
 				return nil, fmt.Errorf("invalid flags '%s' in DNSKEY r: %v", parts[4], err)
@@ -232,6 +245,7 @@ func (r *DNSKEYResponse) Parse(response string) (DNSRecordResult, error) {
 //     otherwise, returns false.
 func (r *DNSKEYRecord) Compare(b *DNSKEYRecord) bool {
 	return r.Flags == b.Flags &&
+		r.TTL == b.TTL &&
 		r.Protocol == b.Protocol &&
 		r.Algorithm == b.Algorithm &&
 		r.PublicKey == b.PublicKey &&
