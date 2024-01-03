@@ -8,10 +8,10 @@ import (
 func TestNewNSECRecordGoodResponse(t *testing.T) {
 	response := goodNsecResponse
 	expected := &NSECRecord{
-		TTL:            86400,
-		NextDomainName: "25anos.ipb.pt.",
-		Types:          "A;NS;SOA;MX;TXT;AAAA;NAPTR;RRSIG;NSEC;DNSKEY;NSEC3PARAM;CAA",
-		Validated:      true,
+		TTL:              86400,
+		NextDomainName:   "25anos.ipb.pt.",
+		RRsetsAssociated: "A;NS;SOA;MX;TXT;AAAA;NAPTR;RRSIG;NSEC;DNSKEY;NSEC3PARAM;CAA",
+		Validated:        true,
 		RRSIG: &RRSIGRecord{
 			TypeCovered: "NSEC",
 			Algorithm:   7,

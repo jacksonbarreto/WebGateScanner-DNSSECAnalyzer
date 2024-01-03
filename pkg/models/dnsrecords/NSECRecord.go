@@ -21,7 +21,7 @@ import (
 //	NextDomainName: A string representing the next domain name in the zone according to canonical
 //	                ordering. Used in proving the non-existence of a name in the zone.
 //
-//	Types: A string listing the types of DNS resource records that exist for the domain name.
+//	RRsetsAssociated: A string listing the types of DNS resource records that exist for the domain name.
 //	       This field helps in understanding the resource records available for the domain.
 //
 //	Validated: A boolean flag indicating whether the NSEC record has been validated
@@ -31,12 +31,12 @@ import (
 //	       This field may be nil if DNSSEC is not used or if the record is not signed.
 //	RawResponse: The raw text of the DNS response containing the NSEC (Next SECure) record.
 type NSECRecord struct {
-	TTL            uint32
-	NextDomainName string
-	Types          string
-	Validated      bool
-	RRSIG          *RRSIGRecord
-	RawResponse    string
+	TTL              uint32
+	NextDomainName   string
+	RRsetsAssociated string
+	Validated        bool
+	RRSIG            *RRSIGRecord
+	RawResponse      string
 }
 
 // Parse parses a raw DNS response string and creates a new NSECRecord struct.
@@ -103,7 +103,7 @@ func (r *NSECRecord) Parse(response string) (DNSRecordResult, error) {
 			r.TTL = uint32(int(ttl))
 
 			r.NextDomainName = parts[4]
-			r.Types = strings.Join(parts[5:], ";")
+			r.RRsetsAssociated = strings.Join(parts[5:], ";")
 
 		} else if rrsigRegex.MatchString(line) {
 			rrsigParser := &RRSIGRecord{}
@@ -128,7 +128,7 @@ func (r *NSECRecord) Parse(response string) (DNSRecordResult, error) {
 //     otherwise, returns false.
 func (r *NSECRecord) Compare(b *NSECRecord) bool {
 	return r.NextDomainName == b.NextDomainName &&
-		r.Types == b.Types &&
+		r.RRsetsAssociated == b.RRsetsAssociated &&
 		r.Validated == b.Validated &&
 		r.RRSIG.Compare(b.RRSIG) &&
 		r.RawResponse == b.RawResponse
@@ -155,13 +155,13 @@ func (r *NSECRecord) String() string {
 		"NSECRecord:\n"+
 			"  TTL: %d\n"+
 			"  Next Domain Name: %s\n"+
-			"  Types: %s\n"+
+			"  RRsetsAssociated: %s\n"+
 			"  Validated: %s\n"+
 			"  RRSIG: %s\n"+
 			"  Raw Response: %s\n",
 		r.TTL,
 		r.NextDomainName,
-		r.Types,
+		r.RRsetsAssociated,
 		validatedStr,
 		rrsigStr,
 		r.RawResponse,
