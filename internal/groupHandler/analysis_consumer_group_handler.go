@@ -1,25 +1,25 @@
-package consumer
+package groupHandler
 
 import (
 	"encoding/json"
 	"github.com/IBM/sarama"
-	"github.com/jacksonbarreto/DNSSECAnalyzer/config"
-	"github.com/jacksonbarreto/DNSSECAnalyzer/internal/producer"
-	"github.com/jacksonbarreto/DNSSECAnalyzer/internal/scanner"
-	"github.com/jacksonbarreto/DNSSECAnalyzer/pkg/logservice"
-	"github.com/jacksonbarreto/DNSSECAnalyzer/pkg/models"
-	"github.com/jacksonbarreto/DNSSECAnalyzer/pkg/models/kafkaModels"
+	"github.com/jacksonbarreto/WebGateScanner-DNSSECAnalyzer/config"
+	"github.com/jacksonbarreto/WebGateScanner-DNSSECAnalyzer/internal/scanner"
+	"github.com/jacksonbarreto/WebGateScanner-DNSSECAnalyzer/pkg/logservice"
+	"github.com/jacksonbarreto/WebGateScanner-DNSSECAnalyzer/pkg/models"
+	"github.com/jacksonbarreto/WebGateScanner-DNSSECAnalyzer/pkg/models/kafkaModels"
+	"github.com/jacksonbarreto/WebGateScanner-kafka/producer"
 )
 
 type AnalysisConsumerGroupHandler struct {
 	scanner     *scanner.Scanner
-	producer    *producer.Producer
+	producer    producer.IProducer
 	Topics      []string
 	TopicsError []string
 	Log         logservice.Logger
 }
 
-func NewAnalysisConsumerGroupHandler(scanner *scanner.Scanner, producer *producer.Producer, topics, topicsError []string, logService logservice.Logger) *AnalysisConsumerGroupHandler {
+func NewAnalysisConsumerGroupHandler(scanner *scanner.Scanner, producer producer.IProducer, topics, topicsError []string, logService logservice.Logger) *AnalysisConsumerGroupHandler {
 	return &AnalysisConsumerGroupHandler{
 		scanner:     scanner,
 		producer:    producer,
@@ -29,7 +29,7 @@ func NewAnalysisConsumerGroupHandler(scanner *scanner.Scanner, producer *produce
 	}
 }
 
-func NewAnalysisConsumerGroupHandlerDefault(scanner *scanner.Scanner, producer *producer.Producer) *AnalysisConsumerGroupHandler {
+func NewAnalysisConsumerGroupHandlerDefault(scanner *scanner.Scanner, producer producer.IProducer) *AnalysisConsumerGroupHandler {
 	kafkaConfig := config.Kafka()
 	topics := kafkaConfig.TopicsProducer
 	topicsError := kafkaConfig.TopicsError
@@ -61,7 +61,7 @@ func (h *AnalysisConsumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroup
 		}
 		for _, topic := range h.Topics {
 			h.Log.Info("Sending message to topic %s", topic)
-			partition, offset, producerErr := h.producer.SendMessage(topic, kafkaMessage)
+			partition, offset, producerErr := h.producer.SendMessage(kafkaMessage)
 			if producerErr != nil {
 				h.handleError(string(message.Value), ScanErr)
 				continue
@@ -105,7 +105,7 @@ func (h *AnalysisConsumerGroupHandler) handleError(url string, err error) {
 
 	for _, topic := range h.TopicsError {
 		h.Log.Error("Sending error message to topic: %s", topic)
-		partition, offset, producerErr := h.producer.SendMessage(topic, kafkaErrorMessage)
+		partition, offset, producerErr := h.producer.SendMessage(kafkaErrorMessage)
 		if producerErr != nil {
 			h.Log.Error("Error sending error message to Kafka topic '%s': %v", topic, producerErr)
 			return
