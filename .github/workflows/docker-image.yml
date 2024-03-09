@@ -46,7 +46,7 @@ jobs:
         id: version
         run: |
           lastTag=$(git describe --tags `git rev-list --tags --max-count=1` 2>/dev/null || echo "0.0.0")
-          
+          echo "lastTag= $lastTag"
           if [ "$lastTag" == "0.0.0" ]; then
             MAJOR=0
             MINOR=1
@@ -55,9 +55,14 @@ jobs:
           else
             IFS='.' read -ra VERSION <<< "$lastTag"
             MAJOR=${VERSION[0]:-0}
-            MINOR=${VERSION[1]:-0}
+            MINOR=${VERSION[1]:-1}
             PATCH=${VERSION[2]:-0}
-            commitMessages=$(git log $lastTag..HEAD --oneline)  
+            commitMessages=$(git log $lastTag..HEAD --oneline)
+          
+            echo $VERSION_MAJOR # Saída: 0
+            echo $VERSION_MINOR # Saída: 1
+            echo $VERSION_PATCH # Saída: 1
+          
           fi
           
           if [[ $commitMessages == *"feat!"* ]]; then
@@ -74,6 +79,7 @@ jobs:
           fi
           
           new_tag="$MAJOR.$MINOR.$PATCH"
+          echo "new_tag= $new_tag"
           echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
 
   build-and-push-docker-image:
@@ -93,6 +99,7 @@ jobs:
         run: |
           REPO=$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
           TAG="${{ needs.versioning.outputs.new_tag }}"
+          echo "Tag= $TAG"
           docker build . --file Dockerfile --tag $REPO:$TAG
           docker push $REPO:$TAG
           docker tag $REPO:$TAG $REPO:latest
