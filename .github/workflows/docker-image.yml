@@ -1,7 +1,5 @@
 # .github/workflows/
 name: Docker Image CI
-permissions:
-  contents: write
 
 on:
   push:
@@ -101,6 +99,8 @@ jobs:
     name: Push Tag and Create Release
     needs: [test, versioning, build-and-push-docker-image]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -130,7 +130,7 @@ jobs:
 
       - name: Create GitHub Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: ncipollo/release-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
