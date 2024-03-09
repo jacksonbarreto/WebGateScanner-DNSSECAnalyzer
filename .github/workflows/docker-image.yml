@@ -129,7 +129,7 @@ jobs:
             LAST_TAG=$(git tag --sort=-creatordate | head -n 2 | tail -n 1)
             RELEASE_NOTES=$(git log $LAST_TAG..${{ needs.versioning.outputs.new_tag }} --pretty=format:"- %s")
           fi
-          echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_ENV
+          echo "RELEASE_NOTES=\"$RELEASE_NOTES\"" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         id: create_release
