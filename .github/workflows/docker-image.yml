@@ -114,6 +114,11 @@ jobs:
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
 
+      - name: Push tag
+        run: |
+          git tag ${{ needs.versioning.outputs.new_tag }}
+          git push origin ${{ needs.versioning.outputs.new_tag }}
+
       - name: Generate release notes
         id: generate_notes
         run: |
@@ -125,11 +130,6 @@ jobs:
             RELEASE_NOTES=$(git log $LAST_TAG..${{ needs.versioning.outputs.new_tag }} --pretty=format:"- %s")
           fi
           echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_ENV
-
-      - name: Push tag
-        run: |
-          git tag ${{ needs.versioning.outputs.new_tag }}
-          git push origin ${{ needs.versioning.outputs.new_tag }}
 
       - name: Create GitHub Release
         id: create_release
