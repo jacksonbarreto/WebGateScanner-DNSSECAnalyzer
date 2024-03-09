@@ -112,10 +112,11 @@ jobs:
       - name: Generate release notes
         id: generate_notes
         run: |
-          LAST_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
-          if [[ -z "$LAST_TAG" ]]; then
+          TAG_COUNT=$(git tag | wc -l)
+          if [ "$TAG_COUNT" -eq 0 ]; then
             RELEASE_NOTES="starting"
           else
+            LAST_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
             RELEASE_NOTES=$(git log $LAST_TAG..${{ needs.versioning.outputs.new_tag }} --pretty=format:"- %s")
           fi
           echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_ENV
