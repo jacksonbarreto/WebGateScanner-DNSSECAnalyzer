@@ -141,10 +141,7 @@ jobs:
             RELEASE_NOTES="starting"
           else
             LAST_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --max-count=2 | tail -n 1))
-            RELEASE_NOTES=$(git log --pretty=format:"- %s" $LAST_TAG..${{ needs.versioning.outputs.new_tag }})
-            RELEASE_NOTES=$(echo -e "## Release Notes\n$RELEASE_NOTES")
           fi
-          echo "RELEASE_NOTES=\"$RELEASE_NOTES\"" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         id: create_release
@@ -156,4 +153,5 @@ jobs:
           name: Release ${{ needs.versioning.outputs.new_tag }}
           draft: false
           prerelease: false
-          body: ${{ env.RELEASE_NOTES }}
+          generateReleaseNotes: true
+          #body: ${{ env.RELEASE_NOTES }}
