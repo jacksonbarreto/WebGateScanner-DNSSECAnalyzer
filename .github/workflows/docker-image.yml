@@ -37,6 +37,8 @@ jobs:
     name: Versioning
     needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
       new_tag: ${{ steps.version.outputs.new_tag}}
     steps:
