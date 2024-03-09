@@ -47,7 +47,7 @@ jobs:
       - name: Calculate new version
         id: version
         run: |
-          lastTag=$(git describe --tags --abbrev=0 2>/dev/null)
+          lastTag=$(git describe --tags --abbrev=0)
           if [ -z "$lastTag" ]; then
             lastTag="0.0.0"
           fi
