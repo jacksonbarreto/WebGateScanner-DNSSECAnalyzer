@@ -50,16 +50,14 @@ jobs:
             MAJOR=0
             MINOR=1
             PATCH=0
+            commitMessages=$(git log --oneline)
           else
             IFS='.' read -ra VERSION <<< "$lastTag"
             MAJOR=${VERSION[0]:-0}
             MINOR=${VERSION[1]:-0}
             PATCH=${VERSION[2]:-0}
+            commitMessages=$(git log $lastTag..HEAD --oneline)  
           fi
-          
-          
-          
-          commitMessages=$(git log $lastTag..HEAD --oneline)
           
           if [[ $commitMessages == *"feat!"* ]]; then
             MAJOR=$((MAJOR+1))
@@ -68,11 +66,7 @@ jobs:
           elif [[ $commitMessages == *"feat"* ]]; then
             MINOR=$((MINOR+1))
             PATCH=0
-          elif [[ $commitMessages == *"fix"* ]]; then
-            PATCH=$((PATCH+1))
-          fi
-          
-          if [[ -z "$commitMessages" ]]; then
+          elif [[ $commitMessages == *"fix"* ]] || [[ -z "$commitMessages" ]] && [ "$lastTag" != "0.0.0" ]; then
             PATCH=$((PATCH+1))
           fi
           
