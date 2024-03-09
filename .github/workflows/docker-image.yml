@@ -140,8 +140,8 @@ jobs:
           if [ "$TAG_COUNT" -eq 0 ]; then
             RELEASE_NOTES="starting"
           else
-            LAST_TAG=$(git tag --sort=-creatordate | head -n 2 | tail -n 1)
-             RELEASE_NOTES="$(git log $LAST_TAG..${{ needs.versioning.outputs.new_tag }} --pretty=format:\"- %s\")"
+            LAST_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --max-count=2 | tail -n 1))
+            RELEASE_NOTES=$(git log --pretty=format:"- %s" $LAST_TAG..${{ needs.versioning.outputs.new_tag }})
           fi
           echo "RELEASE_NOTES=\"$RELEASE_NOTES\"" >> $GITHUB_ENV
 
