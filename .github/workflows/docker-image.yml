@@ -43,6 +43,8 @@ jobs:
       new_tag: ${{ steps.version.outputs.new_tag}}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Calculate new version
         id: version
