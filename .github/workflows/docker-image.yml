@@ -45,7 +45,7 @@ jobs:
       - name: Calculate new version
         id: version
         run: |
-          lastTag=$(git describe --tags `git rev-list --tags --max-count=1` 2>/dev/null || echo "0.0.0")
+          lastTag=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
           echo "lastTag= $lastTag"
           if [ "$lastTag" == "0.0.0" ]; then
             MAJOR=0
