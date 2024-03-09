@@ -134,8 +134,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ needs.versioning.outputs.new_tag }}
-          release_name: Release ${{ needs.versioning.outputs.new_tag }}
+          tag: ${{ needs.versioning.outputs.new_tag }}
+          name: Release ${{ needs.versioning.outputs.new_tag }}
           draft: false
           prerelease: false
           body: ${{ env.RELEASE_NOTES }}
