@@ -47,13 +47,17 @@ jobs:
           lastTag=$(git describe --tags `git rev-list --tags --max-count=1` 2>/dev/null || echo "0.0.0")
           
           if [ "$lastTag" == "0.0.0" ]; then
-            lastTag=$(git rev-list --max-parents=0 HEAD)
+            MAJOR=0
+            MINOR=1
+            PATCH=0
+          else
+            IFS='.' read -ra VERSION <<< "$lastTag"
+            MAJOR=${VERSION[0]:-0}
+            MINOR=${VERSION[1]:-0}
+            PATCH=${VERSION[2]:-0}
           fi
           
-          IFS='.' read -ra VERSION <<< "$lastTag"
-          MAJOR=${VERSION[0]:-0}
-          MINOR=${VERSION[1]:-0}
-          PATCH=${VERSION[2]:-0}
+          
           
           commitMessages=$(git log $lastTag..HEAD --oneline)
           
@@ -96,9 +100,6 @@ jobs:
           docker push $REPO:$TAG
           docker tag $REPO:$TAG $REPO:latest
           docker push $REPO:latest
-
-
-
 
   push-tag-and-create-release:
     name: Push Tag and Create Release
