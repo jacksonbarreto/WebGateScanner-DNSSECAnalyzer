@@ -49,7 +49,7 @@ jobs:
       - name: Calculate new version
         id: version
         run: |
-          lastTag=$(git describe --tags --abbrev=0)
+          lastTag=$(git describe --tags --abbrev=0 2>/dev/null)
           if [ -z "$lastTag" ]; then
             lastTag="0.0.0"
           fi
@@ -141,7 +141,7 @@ jobs:
             RELEASE_NOTES="starting"
           else
             LAST_TAG=$(git tag --sort=-creatordate | head -n 2 | tail -n 1)
-            RELEASE_NOTES=$(git log $LAST_TAG..${{ needs.versioning.outputs.new_tag }} --pretty=format:"- %s")
+             RELEASE_NOTES="$(git log $LAST_TAG..${{ needs.versioning.outputs.new_tag }} --pretty=format:\"- %s\")"
           fi
           echo "RELEASE_NOTES=\"$RELEASE_NOTES\"" >> $GITHUB_ENV
 
