@@ -67,7 +67,9 @@ jobs:
           elif [[ $commitMessages == *"feat"* ]]; then
             MINOR=$((MINOR+1))
             PATCH=0
-          elif [[ $commitMessages == *"fix"* ]] || [[ -z "$commitMessages" ]] && [ "$lastTag" != "0.0.0" ]; then
+          elif [[ $commitMessages == *"fix"* ]]; then
+            PATCH=$((PATCH+1))
+          else
             PATCH=$((PATCH+1))
           fi
           
