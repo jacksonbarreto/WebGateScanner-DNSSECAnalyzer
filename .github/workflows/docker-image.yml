@@ -141,6 +141,8 @@ jobs:
             RELEASE_NOTES="starting"
           else
             LAST_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --max-count=2 | tail -n 1))
+            echo "## Release Notes" > release-notes.txt
+            git log --pretty=format:"- %s" $LAST_TAG..${{ needs.versioning.outputs.new_tag }} >> release-notes.txt
           fi
 
       - name: Create GitHub Release
@@ -153,5 +155,6 @@ jobs:
           name: Release ${{ needs.versioning.outputs.new_tag }}
           draft: false
           prerelease: false
-          generateReleaseNotes: true
+          generateReleaseNotes: false
           #body: ${{ env.RELEASE_NOTES }}
+          bodyFile: release-notes.txt
