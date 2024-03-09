@@ -71,7 +71,7 @@ jobs:
           fi
           
           new_tag="$MAJOR.$MINOR.$PATCH"
-          echo "::set-output name=new_tag::$new_tag"
+          echo "new_tag=$new_tag" >> $GITHUB_ENV
 
   build-and-push-docker-image:
     name: Build and Push Docker Image
@@ -113,7 +113,11 @@ jobs:
         id: generate_notes
         run: |
           LAST_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
-          RELEASE_NOTES=$(git log $LAST_TAG..${{ needs.versioning.outputs.new_tag }} --pretty=format:"- %s")
+          if [[ -z "$LAST_TAG" ]]; then
+            RELEASE_NOTES="starting"
+          else
+            RELEASE_NOTES=$(git log $LAST_TAG..${{ needs.versioning.outputs.new_tag }} --pretty=format:"- %s")
+          fi
           echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_ENV
 
       - name: Push tag
