@@ -29,7 +29,6 @@ USER dnssecanalyser
 
 # Copy the compiled application from the builder stage
 COPY --from=builder /app/cmd/dnssecanalyser/app /dnssecanalyser/app
-COPY --from=builder /app/config.yaml /dnssecanalyser/config.yaml
 
 WORKDIR /dnssecanalyser/
 # Run the compiled binary
