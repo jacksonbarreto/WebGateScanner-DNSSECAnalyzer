@@ -15,7 +15,7 @@ func main() {
 	config.InitConfig(configFilePath)
 	dnsScanner := scanner.NewScannerDefault()
 
-	kafkaProducer, producerErr := producer.NewProducer(config.Kafka().TopicsProducer[0], config.Kafka().Brokers,
+	kafkaProducer, producerErr := producer.NewProducer(config.Kafka().TopicProducer, config.Kafka().Brokers,
 		config.Kafka().MaxRetry)
 	if producerErr != nil {
 		panic(producerErr)

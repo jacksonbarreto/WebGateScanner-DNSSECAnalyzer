@@ -21,8 +21,8 @@ type AppConfig struct {
 type KafkaConfig struct {
 	Brokers        []string
 	TopicsConsumer []string
-	TopicsProducer []string
-	TopicsError    []string
+	TopicProducer  string
+	TopicError     string
 	GroupID        string
 	MaxRetry       int
 }

@@ -5,8 +5,7 @@ go 1.21.0
 require (
 	bou.ke/monkey v1.0.2
 	github.com/IBM/sarama v1.43.0
-	github.com/jacksonbarreto/DNSSECAnalyzer v0.0.0-20231230213248-a0502e294a3a
-	github.com/jacksonbarreto/WebGateScanner-kafka v0.0.0-20240307214930-0c8a7f630beb
+	github.com/jacksonbarreto/WebGateScanner-kafka v0.0.0-20240313164613-6481446821ac
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/spf13/viper v1.18.2
 )

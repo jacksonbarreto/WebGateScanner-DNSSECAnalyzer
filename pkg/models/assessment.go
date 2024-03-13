@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/jacksonbarreto/DNSSECAnalyzer/pkg/models/dnsrecords"
+	"github.com/jacksonbarreto/WebGateScanner-DNSSECAnalyzer/pkg/models/dnsrecords"
 	"time"
 )
 
