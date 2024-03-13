@@ -6,7 +6,6 @@ import (
 	"github.com/jacksonbarreto/WebGateScanner-DNSSECAnalyzer/config"
 	"github.com/jacksonbarreto/WebGateScanner-DNSSECAnalyzer/internal/scanner"
 	"github.com/jacksonbarreto/WebGateScanner-DNSSECAnalyzer/pkg/logservice"
-	"github.com/jacksonbarreto/WebGateScanner-DNSSECAnalyzer/pkg/models"
 	kmodels "github.com/jacksonbarreto/WebGateScanner-kafka/models"
 	"github.com/jacksonbarreto/WebGateScanner-kafka/producer"
 	"time"
@@ -64,7 +63,8 @@ func (h *AnalysisConsumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroup
 			h.handleError(evalRequest.URL, ScanErr)
 			continue
 		}
-		kafkaMessage, msgErr := createKafkaMessage(result, evalRequest.InstitutionID)
+		kafkaMessage, msgErr := kmodels.CreateKafkaEvaluationResponseMessage(evalRequest.InstitutionID, config.App().Id,
+			result.Start.Unix(), result.End.Unix(), result)
 		if msgErr != nil {
 			h.handleError(evalRequest.URL, ScanErr)
 			continue
@@ -78,31 +78,6 @@ func (h *AnalysisConsumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroup
 		session.MarkMessage(message, "")
 	}
 	return nil
-}
-
-func createKafkaMessage(result *models.Assessment, institutionID string) (string, error) {
-	evalResponse := kmodels.EvaluationResponse{
-		StartTime:     result.Start.Unix(),
-		EndTime:       result.End.Unix(),
-		Origin:        config.App().Id,
-		InstitutionID: institutionID,
-	}
-
-	resultJson, err := json.Marshal(result)
-	if err != nil {
-		return "", err
-	}
-
-	err = json.Unmarshal(resultJson, &evalResponse.EvaluationResult)
-	if err != nil {
-		return "", err
-	}
-
-	jsonData, err := json.Marshal(evalResponse)
-	if err != nil {
-		return "", err
-	}
-	return string(jsonData), nil
 }
 
 func (h *AnalysisConsumerGroupHandler) handleError(url string, err error) {
