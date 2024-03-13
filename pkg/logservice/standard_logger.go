@@ -2,7 +2,7 @@ package logservice
 
 import (
 	"fmt"
-	"github.com/jacksonbarreto/DNSSECAnalyzer/config"
+	"github.com/jacksonbarreto/WebGateScanner-DNSSECAnalyzer/config"
 	"log"
 	"os"
 )
