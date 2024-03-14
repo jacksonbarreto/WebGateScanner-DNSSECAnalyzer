@@ -28,7 +28,7 @@ RUN adduser -D dnssecanalyzer
 USER dnssecanalyzer
 
 # Copy the compiled application from the builder stage
-COPY --from=builder /app/cmd/dnssecanalyser/app /dnssecanalyzer/app
+COPY --from=builder /app/cmd/dnssecanalyzer/app /dnssecanalyzer/app
 
 WORKDIR /dnssecanalyzer/
 # Run the compiled binary
