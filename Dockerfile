@@ -12,7 +12,7 @@ RUN go mod download
 COPY . .
 
 # Navigate to the directory containing the main.go file
-WORKDIR /app/cmd/dnssecanalyser
+WORKDIR /app/cmd/dnssecanalyzer
 
 # Build the application with optimization flags
 RUN go build -ldflags="-w -s" -o app ./main.go
@@ -24,12 +24,12 @@ FROM alpine:3.19
 RUN apk add --no-cache bind-tools
 
 # Add a non-root user
-RUN adduser -D dnssecanalyser
-USER dnssecanalyser
+RUN adduser -D dnssecanalyzer
+USER dnssecanalyzer
 
 # Copy the compiled application from the builder stage
-COPY --from=builder /app/cmd/dnssecanalyser/app /dnssecanalyser/app
+COPY --from=builder /app/cmd/dnssecanalyser/app /dnssecanalyzer/app
 
-WORKDIR /dnssecanalyser/
+WORKDIR /dnssecanalyzer/
 # Run the compiled binary
-CMD ["/dnssecanalyser/app"]
+CMD ["/dnssecanalyzer/app"]
