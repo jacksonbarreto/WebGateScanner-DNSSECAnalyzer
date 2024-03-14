@@ -56,7 +56,7 @@ func (h *AnalysisConsumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroup
 			continue
 		}
 		startTime := time.Now().Unix()
-		h.log.Info("Starting evaluation for Institution ID %d with URL %s at timestamp %d", evalRequest.InstitutionID, evalRequest.URL, startTime)
+		h.log.Info("Starting evaluation for Institution ID %s with URL %s at timestamp %d", evalRequest.InstitutionID, evalRequest.URL, startTime)
 
 		result, ScanErr := h.scanner.Scan(evalRequest.URL)
 		if ScanErr != nil {
@@ -81,5 +81,5 @@ func (h *AnalysisConsumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroup
 }
 
 func (h *AnalysisConsumerGroupHandler) handleError(url string, err error) {
-	h.log.Error("Error encountered for URL '%s' in '%s': %v", url, err)
+	h.log.Error("Error encountered for URL '%s' (topic: %s): %v", url, config.Kafka().TopicProducer, err)
 }

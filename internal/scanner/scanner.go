@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jacksonbarreto/WebGateScanner-DNSSECAnalyzer/config"
 	"github.com/jacksonbarreto/WebGateScanner-DNSSECAnalyzer/internal/domainextractor"
+	"github.com/jacksonbarreto/WebGateScanner-DNSSECAnalyzer/pkg/logservice"
 	"github.com/jacksonbarreto/WebGateScanner-DNSSECAnalyzer/pkg/models"
 	"github.com/jacksonbarreto/WebGateScanner-DNSSECAnalyzer/pkg/models/dnsrecords"
 	"os"
@@ -43,9 +44,10 @@ func (s *Scanner) Scan(url string) (*models.Assessment, error) {
 		return nil, err
 	}
 	assessment := models.NewAssessment(url, domain)
-
+	logger := logservice.NewLogServiceDefault()
 	assessment.Begin()
 	for recordType, parser := range s.parsers {
+		logger.Info("Scanning %s record for domain %s with DNS server %s", recordType, domain, s.dnsServerIP)
 		cmd := exec.Command("delv", s.dnsServerIP, domain, recordType)
 		var out bytes.Buffer
 		cmd.Stdout = &out
