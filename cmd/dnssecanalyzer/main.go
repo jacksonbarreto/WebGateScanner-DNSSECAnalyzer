@@ -24,7 +24,7 @@ func main() {
 		panic(producerErr)
 	}
 	defer kafkaProducer.Close()
-
+	logger.Info("Producer to topic %s created", config.Kafka().TopicProducer)
 	handler := groupHandler.NewAnalysisConsumerGroupHandlerDefault(dnsScanner, kafkaProducer)
 
 	kafkaConfig := config.Kafka()

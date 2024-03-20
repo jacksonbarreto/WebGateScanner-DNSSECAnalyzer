@@ -67,6 +67,8 @@ func InitConfig(configPath string) {
 			log.Fatalf("configuration error: %v", err)
 		}
 	}
+
+	log.Printf("Configuration loaded successfully: %v", internalConfig)
 }
 
 func Kafka() *KafkaConfig {
